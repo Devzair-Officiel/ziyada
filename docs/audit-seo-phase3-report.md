@@ -2,7 +2,7 @@
 
 **Date** : 2026-07-13
 **Environnement testé** : Docker Compose local basculé en `APP_ENV=prod`
-avec `SITE_INDEXABLE=true` + `APP_BASE_URL=https://nidemiel.com`.
+avec `SITE_INDEXABLE=true` + `APP_BASE_URL=https://ziyada.fr`.
 **Ingénieur** : audit assisté (Claude Opus 4.7) sur demande utilisateur.
 **Portée** : blocage de sortie sur toutes les défauts SEO/GEO critiques
 identifiés dans les phases 1 et 2, plus vérification frontale, sécurité
@@ -70,12 +70,12 @@ Prend une regex Symfony native (une seule chaîne, alternatives via `|`).
 Test réel :
 
 ```bash
-TRUSTED_HOSTS='^(nidemiel\.com|www\.nidemiel\.com|localhost)$'
+TRUSTED_HOSTS='^(ziyada\.fr|www\.ziyada\.fr|localhost)$'
 curl -H "Host: evil.example" https://localhost/         # → 400
-curl -H "Host: nidemiel.com.evil" https://localhost/    # → 400
-curl -H "Host: prep.nidemiel.com" https://localhost/    # → 400
-curl -H "Host: www.nidemiel.com" https://localhost/     # → 200
-curl -H "Host: nidemiel.com" https://localhost/         # → 200
+curl -H "Host: ziyada.fr.evil" https://localhost/    # → 400
+curl -H "Host: prep.ziyada.fr" https://localhost/    # → 400
+curl -H "Host: www.ziyada.fr" https://localhost/     # → 200
+curl -H "Host: ziyada.fr" https://localhost/         # → 200
 ```
 
 Ancrages `^…$` corrects, aucun contournement possible via suffixe/préfixe.
@@ -120,7 +120,7 @@ Script PHP CLI qui :
 - produit `var/audit/sitemap-audit-{timestamp}.csv` et `.md`,
 - exit code 1 dès qu'une anomalie est trouvée.
 
-Usage : `php scripts/sitemap-audit.php https://nidemiel.com/sitemap.xml`.
+Usage : `php scripts/sitemap-audit.php https://ziyada.fr/sitemap.xml`.
 
 ### D.2 `scripts/seo-smoke-test.sh`
 
@@ -164,7 +164,7 @@ Disallow: /admin /account /login /register /logout /reset-password
 Disallow: /cart /checkout /stripe/
 Disallow: /compare /wishlist /verify/ /connect/
 Disallow: /api/ /product/get/ /product/search /webhooks/
-Sitemap: https://nidemiel.com/sitemap.xml
+Sitemap: https://ziyada.fr/sitemap.xml
 ```
 
 - **Aucun bot IA n'est bloqué explicitement** : `OAI-SearchBot`,
@@ -217,7 +217,7 @@ Résumé :
    immédiatement après lecture de ce rapport.
 2. **Restaurer le bloc `@nonCanonicalHost`** dans le `Caddyfile` **côté
    VPS de production uniquement**, sous forme d'un site block séparé
-   (`www.nidemiel.com { redir https://nidemiel.com{uri} 301 }`) plutôt
+   (`www.ziyada.fr { redir https://ziyada.fr{uri} 301 }`) plutôt
    qu'un matcher CEL. Le fichier dev n'a pas besoin de cette redirection.
 3. **Validation éditoriale Manuka MGO** — texte à réviser par l'équipe
    éditoriale avant que la fiche puisse revendiquer un vrai `AggregateRating`

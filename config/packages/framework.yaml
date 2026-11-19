@@ -7,7 +7,7 @@ framework:
     # Host header validation : regex unique (Symfony fera un OR interne).
     # Vide en dev/preview (aucune restriction). Défini en prod publique pour bloquer
     # les injections de Host header (cache poisoning, canonical spoofing).
-    # Exemple prod : TRUSTED_HOSTS="^(nidemiel\.com|www\.nidemiel\.com)$"
+    # Exemple prod : TRUSTED_HOSTS="^(ziyada\.fr|www\.ziyada\.fr)$"
     trusted_hosts: '%env(default::string:TRUSTED_HOSTS)%'
 
     # Note that the session will be started ONLY if you read or write from it.

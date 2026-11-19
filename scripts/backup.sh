@@ -109,14 +109,14 @@ rclone_cmd() { "$RCLONE_BIN" --config "$RCLONE_CONFIG" "$@"; }
 
 if [[ -x "$RCLONE_BIN" ]] && rclone_cmd listremotes 2>/dev/null | grep -q "^backup:"; then
     if [[ -d "$UPLOADS_VOLUME" ]]; then
-        log "Sync images uploads → backup:nidemiel-backups/uploads/"
-        rclone_cmd sync "$UPLOADS_VOLUME" backup:nidemiel-backups/uploads/ \
+        log "Sync images uploads → backup:ziyada-backups/uploads/"
+        rclone_cmd sync "$UPLOADS_VOLUME" backup:ziyada-backups/uploads/ \
             --transfers 4 --log-level INFO \
             || log "AVERTISSEMENT : sync uploads a échoué"
     fi
     if [[ -d "$VIDEOS_VOLUME" ]]; then
-        log "Sync vidéos → backup:nidemiel-backups/videos/"
-        rclone_cmd sync "$VIDEOS_VOLUME" backup:nidemiel-backups/videos/ \
+        log "Sync vidéos → backup:ziyada-backups/videos/"
+        rclone_cmd sync "$VIDEOS_VOLUME" backup:ziyada-backups/videos/ \
             --transfers 2 --log-level INFO \
             || log "AVERTISSEMENT : sync vidéos a échoué"
     fi
@@ -128,8 +128,8 @@ fi
 # Nécessite rclone configuré avec un remote nommé "backup"
 # Voir : https://rclone.org/docs/ — rclone config
 if [[ -x "$RCLONE_BIN" ]] && rclone_cmd listremotes 2>/dev/null | grep -q "^backup:"; then
-    log "Sync BDD vers stockage distant (rclone backup:nidemiel-backups/)…"
-    rclone_cmd copy "$BACKUP_DIR" backup:nidemiel-backups/ \
+    log "Sync BDD vers stockage distant (rclone backup:ziyada-backups/)…"
+    rclone_cmd copy "$BACKUP_DIR" backup:ziyada-backups/ \
         --include "*.gz" \
         --transfers 2 \
         --log-level INFO \

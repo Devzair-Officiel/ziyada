@@ -8,7 +8,7 @@ declare(strict_types=1);
  * CSV + Markdown. Sort en code 1 dès qu'une anomalie est détectée.
  *
  * Usage :
- *   php scripts/sitemap-audit.php https://nidemiel.com/sitemap.xml [--out=var/audit]
+ *   php scripts/sitemap-audit.php https://ziyada.fr/sitemap.xml [--out=var/audit]
  *
  * Vérifications :
  *   - Le sitemap est un XML valide (urlset)
@@ -19,7 +19,7 @@ declare(strict_types=1);
  *   - Le Content-Type est text/html
  */
 
-const USER_AGENT = 'NidemielSitemapAudit/1.0 (+SEO validation)';
+const USER_AGENT = 'ZiyadaSitemapAudit/1.0 (+SEO validation)';
 const TIMEOUT_SECONDS = 15;
 const MAX_URLS = 5000;
 

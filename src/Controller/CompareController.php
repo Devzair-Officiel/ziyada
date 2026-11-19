@@ -25,7 +25,7 @@ class CompareController extends AbstractController
         $data = $this->compareService->getCompareDetails();
 
         $seo = $this->seoResolver->forStaticPage([
-            'title'       => 'Comparateur de miels — Nidemiel',
+            'title'       => 'Comparateur de miels — Ziyada',
             'description' => 'Comparez plusieurs miels côte à côte : caractéristiques, dégustation, données d’analyse laboratoire.',
             'route'       => 'app_compare',
             'robots'      => 'noindex,follow',

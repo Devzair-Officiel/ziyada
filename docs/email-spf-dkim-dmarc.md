@@ -12,7 +12,7 @@ Sans configuration, tes emails risquent de :
 - Être marqués comme **phishing** (usurpation d'identité)
 
 SPF, DKIM et DMARC sont trois enregistrements DNS qui prouvent aux serveurs de messagerie
-que **c'est bien toi** qui envoies depuis `nidemiel.com`.
+que **c'est bien toi** qui envoies depuis `ziyada.fr`.
 
 ---
 
@@ -25,8 +25,8 @@ SPF déclare la liste des serveurs autorisés à envoyer des emails pour ton dom
 > Si ton serveur n'est pas sur la liste, l'email est suspect.
 
 ### Comment ça marche ?
-Quand Gmail reçoit un email de `contact@nidemiel.com`, il regarde dans le DNS de
-`nidemiel.com` s'il existe un enregistrement SPF, et vérifie si le serveur expéditeur
+Quand Gmail reçoit un email de `contact@ziyada.fr`, il regarde dans le DNS de
+`ziyada.fr` s'il existe un enregistrement SPF, et vérifie si le serveur expéditeur
 est dans la liste autorisée.
 
 ### Configuration sur OVH
@@ -63,7 +63,7 @@ et qu'il vient bien de ton serveur.
 
 ### Comment ça marche ?
 - Ton serveur mail **signe** chaque email avec une clé privée (secrète)
-- Ta clé publique est publiée dans le DNS de `nidemiel.com`
+- Ta clé publique est publiée dans le DNS de `ziyada.fr`
 - Le serveur du destinataire vérifie la signature avec la clé publique
 
 ### Configuration sur OVH
@@ -75,7 +75,7 @@ OVH peut gérer DKIM automatiquement :
 OVH crée automatiquement l'enregistrement DNS suivant :
 
 ```
-ovhmo._domainkey.nidemiel.com  TXT  "v=DKIM1; k=rsa; p=MIGfMA0GCSq..."
+ovhmo._domainkey.ziyada.fr  TXT  "v=DKIM1; k=rsa; p=MIGfMA0GCSq..."
 ```
 
 > Si tu gères DKIM manuellement (ex: serveur externe), il faut :
@@ -105,14 +105,14 @@ qui te montrent qui essaie d'envoyer des emails en usurpant ton domaine.
 |-------|--------|
 | Sous-domaine | `_dmarc` |
 | TTL | 3600 |
-| Valeur | `v=DMARC1; p=none; rua=mailto:contact@nidemiel.com; pct=100` |
+| Valeur | `v=DMARC1; p=none; rua=mailto:contact@ziyada.fr; pct=100` |
 
 **Explication de la valeur :**
 - `v=DMARC1` → version DMARC
 - `p=none` → mode surveillance (aucune action, juste des rapports) — **commencer par là**
 - `p=quarantine` → mettre en spam si échec (activer après quelques semaines)
 - `p=reject` → rejeter si échec (activer quand tout est stable)
-- `rua=mailto:contact@nidemiel.com` → envoyer les rapports à cette adresse
+- `rua=mailto:contact@ziyada.fr` → envoyer les rapports à cette adresse
 - `pct=100` → appliquer à 100% des emails
 
 ### Évolution recommandée
@@ -130,7 +130,7 @@ Mois 2+      →  p=reject     (les faux emails sont rejetés)
 | Type | Sous-domaine | Valeur |
 |------|-------------|--------|
 | TXT | *(vide)* | `v=spf1 include:mx.ovh.com ~all` |
-| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:contact@nidemiel.com; pct=100` |
+| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:contact@ziyada.fr; pct=100` |
 | TXT | `ovhmo._domainkey` | *(généré automatiquement par OVH)* |
 
 ---
@@ -141,10 +141,10 @@ Dans `.env.prod.local` (ne jamais commiter ce fichier) :
 
 ```env
 # SMTP OVH avec SSL port 465
-MAILER_DSN=smtp://contact@nidemiel.com:TON_MOT_DE_PASSE@ssl0.ovh.net:465?encryption=ssl
+MAILER_DSN=smtp://contact@ziyada.fr:TON_MOT_DE_PASSE@ssl0.ovh.net:465?encryption=ssl
 
 # Ou avec STARTTLS port 587
-MAILER_DSN=smtp://contact@nidemiel.com:TON_MOT_DE_PASSE@ssl0.ovh.net:587?encryption=tls
+MAILER_DSN=smtp://contact@ziyada.fr:TON_MOT_DE_PASSE@ssl0.ovh.net:587?encryption=tls
 ```
 
 ---
@@ -161,19 +161,19 @@ MAILER_DSN=smtp://contact@nidemiel.com:TON_MOT_DE_PASSE@ssl0.ovh.net:587?encrypt
 ### Vérifier SPF
 ```bash
 # Depuis un terminal
-nslookup -type=TXT nidemiel.com
+nslookup -type=TXT ziyada.fr
 # Doit afficher : v=spf1 include:mx.ovh.com ~all
 ```
 
 ### Vérifier DKIM
 ```bash
-nslookup -type=TXT ovhmo._domainkey.nidemiel.com
+nslookup -type=TXT ovhmo._domainkey.ziyada.fr
 # Doit afficher la clé publique
 ```
 
 ### Vérifier DMARC
 ```bash
-nslookup -type=TXT _dmarc.nidemiel.com
+nslookup -type=TXT _dmarc.ziyada.fr
 # Doit afficher : v=DMARC1; p=none; ...
 ```
 

@@ -65,13 +65,13 @@ Dans UptimeRobot → **Add New Monitor** :
 
 | Moniteur | Type | URL | Intervalle |
 |----------|------|-----|------------|
-| Site principal | HTTPS | `https://nidemiel.com` | 5 min |
-| Page produit | HTTPS | `https://nidemiel.com/boutique` | 5 min |
-| Sitemap (Symfony alive) | HTTPS | `https://nidemiel.com/sitemap.xml` | 5 min |
+| Site principal | HTTPS | `https://ziyada.fr` | 5 min |
+| Page produit | HTTPS | `https://ziyada.fr/boutique` | 5 min |
+| Sitemap (Symfony alive) | HTTPS | `https://ziyada.fr/sitemap.xml` | 5 min |
 
 **Paramètres pour chaque moniteur :**
 - Type : **HTTPS**
-- Friendly Name : nom lisible (ex: "nidemiel.com — Site principal")
+- Friendly Name : nom lisible (ex: "ziyada.fr — Site principal")
 - URL : l'URL à surveiller
 - Monitoring Interval : **5 minutes**
 - Alert Contacts : ton adresse email
@@ -85,7 +85,7 @@ UptimeRobot envoie un email dès que :
 
 ### Page de statut publique (optionnel)
 
-UptimeRobot permet de créer une page de statut publique (ex: `status.nidemiel.com`) que tu peux partager avec tes clients en cas d'incident. Disponible dans l'onglet **Status Pages**.
+UptimeRobot permet de créer une page de statut publique (ex: `status.ziyada.fr`) que tu peux partager avec tes clients en cas d'incident. Disponible dans l'onglet **Status Pages**.
 
 ---
 

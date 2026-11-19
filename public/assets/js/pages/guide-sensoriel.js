@@ -1,5 +1,5 @@
 /**
- * Guide Sensoriel Nidemiel — comportements JS.
+ * Guide Sensoriel Ziyada — comportements JS.
  * Barre de progression au scroll + surlignage de la section active dans le sommaire.
  * Vanilla, sans dépendance.
  */

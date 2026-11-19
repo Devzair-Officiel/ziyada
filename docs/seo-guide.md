@@ -129,10 +129,10 @@ index,follow    → toutes les pages de contenu
 Format :   Mot-clé Principal — Contexte | Marque
 Longueur : 50-60 caractères maximum
 Exemples :
-  ✅ Miel de Thym Naturel | Nidemiel
-  ✅ Acheter du Miel de Jujubier en France | Nidemiel
+  ✅ Miel de Thym Naturel | Ziyada
+  ✅ Acheter du Miel de Jujubier en France | Ziyada
   ❌ Produit n°42
-  ❌ Nidemiel - Miel de thym naturel pur artisanal bio premium qualité (trop long)
+  ❌ Ziyada - Miel de thym naturel pur artisanal bio premium qualité (trop long)
 ```
 
 ### Règles pour la `<meta description>`
@@ -142,7 +142,7 @@ Longueur : 150-160 caractères
 Contient : le mot-clé principal + un appel à l'action
 Exemples :
   ✅ Miel de thym naturel récolté à la main. 100% pur, sans additifs.
-     Livraison rapide en France. Commandez sur Nidemiel.
+     Livraison rapide en France. Commandez sur Ziyada.
   ❌ Découvrez nos produits. (trop vague)
   ❌ (absent) → Google génère automatiquement, souvent mal
 ```
@@ -265,7 +265,7 @@ Original   → zoom, download
 ### Règles pour l'attribut `alt`
 
 ```
-✅ alt="Miel de thym naturel artisanal — Nidemiel"
+✅ alt="Miel de thym naturel artisanal — Ziyada"
 ✅ alt="Pot de 500g de miel de jujubier"
 ❌ alt="image001.jpg"
 ❌ alt=""  (sauf si image décorative)
@@ -368,8 +368,8 @@ FAQ                 → FAQPage
   "@type": "Product",
   "name": "Miel de Thym Naturel",
   "description": "Miel de thym 100% naturel, récolté à la main...",
-  "image": ["https://nidemiel.fr/images/miel-thym.webp"],
-  "brand": { "@type": "Brand", "name": "Nidemiel" },
+  "image": ["https://ziyada.fr/images/miel-thym.webp"],
+  "brand": { "@type": "Brand", "name": "Ziyada" },
   "offers": {
     "@type": "Offer",
     "priceCurrency": "EUR",
@@ -391,17 +391,17 @@ FAQ                 → FAQPage
 {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "Nidemiel",
-  "url": "https://nidemiel.fr",
-  "logo": "https://nidemiel.fr/logo.png",
+  "name": "Ziyada",
+  "url": "https://ziyada.fr",
+  "logo": "https://ziyada.fr/logo.png",
   "contactPoint": {
     "@type": "ContactPoint",
     "contactType": "customer service",
     "availableLanguage": "French"
   },
   "sameAs": [
-    "https://www.instagram.com/nidemiel",
-    "https://www.facebook.com/nidemiel"
+    "https://www.instagram.com/ziyada",
+    "https://www.facebook.com/ziyada"
   ]
 }
 ```
@@ -441,7 +441,7 @@ en 3 clics maximum depuis la page d'accueil.
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://nidemiel.fr/produits/miel-de-thym</loc>
+    <loc>https://ziyada.fr/produits/miel-de-thym</loc>
     <lastmod>2024-01-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -480,7 +480,7 @@ Disallow: /register
 Disallow: /api/
 Disallow: /product/search
 
-Sitemap: https://nidemiel.fr/sitemap.xml
+Sitemap: https://ziyada.fr/sitemap.xml
 ```
 
 ---

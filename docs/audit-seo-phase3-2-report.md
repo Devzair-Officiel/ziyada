@@ -13,8 +13,8 @@ corrigés.
 
 ### 1.1 Mode SITE_INDEXABLE=true (prod publique)
 
-Capture live via `curl -H "Host: nidemiel.com" https://localhost/robots.txt`
-avec `SITE_INDEXABLE=true`, `TRUSTED_HOSTS=^(nidemiel\.com|www\.nidemiel\.com)$`,
+Capture live via `curl -H "Host: ziyada.fr" https://localhost/robots.txt`
+avec `SITE_INDEXABLE=true`, `TRUSTED_HOSTS=^(ziyada\.fr|www\.ziyada\.fr)$`,
 `APP_ENV=prod` :
 
 ```
@@ -34,7 +34,7 @@ Disallow: /verify/
 Disallow: /connect/
 Disallow: /logout
 
-Sitemap: https://nidemiel.com/sitemap.xml
+Sitemap: https://ziyada.fr/sitemap.xml
 ```
 
 **Contrôles automatisés passés** :
@@ -43,10 +43,10 @@ Sitemap: https://nidemiel.com/sitemap.xml
   strippant les commentaires `#…`).
 - `User-agent: *` **ne contient pas** `Disallow: /` — indexation
   autorisée globalement.
-- Ligne `Sitemap:` présente, pointant sur `https://nidemiel.com/sitemap.xml`.
+- Ligne `Sitemap:` présente, pointant sur `https://ziyada.fr/sitemap.xml`.
 - Aucune règle explicite pour `OAI-SearchBot` (comportement par défaut =
   autorisé). Recommandation Phase 3.2 non-implémentée volontairement :
-  la stratégie éditoriale Nidemiel est « présence maximale sur tous les
+  la stratégie éditoriale Ziyada est « présence maximale sur tous les
   Search » — aucun bot IA n'est bloqué.
 
 ### 1.2 Mode SITE_INDEXABLE=false (preview / staging)
@@ -67,9 +67,9 @@ mais n'est pas déclaré). Cohérent avec la politique noindex.
 
 ```
 $ EXPECTED_INDEXABLE=true \
-  EXPECTED_CANONICAL=https://nidemiel.com \
+  EXPECTED_CANONICAL=https://ziyada.fr \
   BASE_URL=https://localhost \
-  HOST_HEADER=nidemiel.com \
+  HOST_HEADER=ziyada.fr \
   PRODUCT_PATH=/miels/miel-de-jujubier-sidr-du-yemen \
   bash scripts/seo-smoke-test.sh
 ```
@@ -81,13 +81,13 @@ Résumé des 20 vérifications :
   domaine canonique, un chemin par `Disallow`, absence de bloc dédié
   OAI-SearchBot documentée
 - Home : `meta robots="index,follow"`, canonical + og:url + JSON-LD
-  **tous sur `https://nidemiel.com`**
+  **tous sur `https://ziyada.fr`**
 - Fiche produit `/miels/miel-de-jujubier-sidr-du-yemen` : 200, canonical
-  + og:url + toutes les URLs JSON-LD sur `https://nidemiel.com`
+  + og:url + toutes les URLs JSON-LD sur `https://ziyada.fr`
 - Injection Host `attacker.example` : réponse ne contient jamais
   `attacker.example`
 - `/sitemap.xml` : 200, `<urlset>` valide, toutes les `<loc>` sur
-  `https://nidemiel.com`
+  `https://ziyada.fr`
 
 Verdict script : `✅ Smoke test SEO : SUCCÈS (mode attendu : true)`.
 
@@ -143,7 +143,7 @@ recharge pas les variables d'environnement dans FrankenPHP).
 
 ```
 $ CADDY_EXTRA_CONFIG="import /etc/frankenphp/Caddyfile.prod" \
-  SERVER_NAME="nidemiel.com" \
+  SERVER_NAME="ziyada.fr" \
   frankenphp validate --config /etc/frankenphp/Caddyfile --adapter caddyfile
 
 … "msg":"adapted config to JSON","adapter":"caddyfile"
@@ -155,18 +155,18 @@ Valid configuration
 
 **Avant** :
 ```yaml
-SERVER_NAME: "nidemiel.com, www.nidemiel.com"
+SERVER_NAME: "ziyada.fr, www.ziyada.fr"
 ```
-→ conflit de route : `www.nidemiel.com` est défini à la fois par le
+→ conflit de route : `www.ziyada.fr` est défini à la fois par le
 bloc principal ET par le fragment importé. Résultat : `frankenphp
-validate` renvoie `ambiguous site definition: www.nidemiel.com`. Bloque
+validate` renvoie `ambiguous site definition: www.ziyada.fr`. Bloque
 le démarrage en prod.
 
 **Après** :
 ```yaml
-SERVER_NAME: "nidemiel.com"
+SERVER_NAME: "ziyada.fr"
 ```
-Le bloc `www.nidemiel.com { redir https://nidemiel.com{uri} 308 }` du
+Le bloc `www.ziyada.fr { redir https://ziyada.fr{uri} 308 }` du
 fragment `frankenphp/Caddyfile.prod` est le seul propriétaire de cet
 hôte. Caddy provisionne automatiquement son certificat TLS via
 Let's Encrypt.
@@ -176,7 +176,7 @@ Let's Encrypt.
 ```json
 {
     "match": [
-        { "host": ["www.nidemiel.com"] }
+        { "host": ["www.ziyada.fr"] }
     ],
     "handle": [
         {
@@ -188,7 +188,7 @@ Let's Encrypt.
                             "handler": "static_response",
                             "headers": {
                                 "Location": [
-                                    "https://nidemiel.com{http.request.uri}"
+                                    "https://ziyada.fr{http.request.uri}"
                                 ]
                             },
                             "status_code": 308
@@ -202,8 +202,8 @@ Let's Encrypt.
 }
 ```
 
-Le route matche `Host: www.nidemiel.com`, retourne un 308 vers
-`https://nidemiel.com{uri}`, et `"terminal": true` empêche tout autre
+Le route matche `Host: www.ziyada.fr`, retourne un 308 vers
+`https://ziyada.fr{uri}`, et `"terminal": true` empêche tout autre
 route de matcher.
 
 ### 3.4 Choix du mécanisme : CADDY_EXTRA_CONFIG plutôt que Caddyfile.d
@@ -236,7 +236,7 @@ Quand `SITE_INDEXABLE=true`, la valeur de `TRUSTED_HOSTS` est
    `192.168.`, `.local`, `.test`, `preview.`, `staging.`, `preprod.`,
 3. ne pas être un regex trop large (`.*`, `.+`, `^.*$`, `^.$`, `^$`),
 4. être **ancré** (commencer par `^` et finir par `$`) pour empêcher
-   `nidemiel.com` de matcher `evil.nidemiel.com.attacker.example`.
+   `ziyada.fr` de matcher `evil.ziyada.fr.attacker.example`.
 
 En mode non-indexable, `TRUSTED_HOSTS` peut être vide (dev/preview).
 
@@ -247,7 +247,7 @@ En mode non-indexable, `TRUSTED_HOSTS` peut être vide (dev/preview).
 - `testIndexableTrustedHostsEmptyThrows` — chaîne vide en indexable →
   `\InvalidArgumentException`
 - `testIndexableTrustedHostsAcceptsCanonicalDomains` — regex
-  `^(nidemiel\.com|www\.nidemiel\.com)$` accepté
+  `^(ziyada\.fr|www\.ziyada\.fr)$` accepté
 - `testIndexableTrustedHostsRejectsLocalhost` — `localhost` dans le
   regex → refusé
 - `testIndexableTrustedHostsRejectsLoopbackIp` — `127.0.0.1` → refusé
@@ -257,11 +257,11 @@ En mode non-indexable, `TRUSTED_HOSTS` peut être vide (dev/preview).
 - `testIndexableTrustedHostsTooBroadAnchoredDotStarThrows` — `^.*$` →
   refusé
 - `testIndexableTrustedHostsTooBroadDotPlusThrows` — `.+` → refusé
-- `testIndexableTrustedHostsUnanchoredThrows` — `nidemiel\.com` (sans
+- `testIndexableTrustedHostsUnanchoredThrows` — `ziyada\.fr` (sans
   `^` ni `$`) → refusé
-- `testIndexableTrustedHostsMissingEndAnchorThrows` — `^nidemiel\.com`
+- `testIndexableTrustedHostsMissingEndAnchorThrows` — `^ziyada\.fr`
   (manque `$`) → refusé
-- `testIndexableTrustedHostsMissingStartAnchorThrows` — `nidemiel\.com$`
+- `testIndexableTrustedHostsMissingStartAnchorThrows` — `ziyada\.fr$`
   (manque `^`) → refusé
 - `testNonIndexableTolerantOnTrustedHostsLocalhost` — `localhost` en
   non-indexable → accepté
@@ -277,12 +277,12 @@ Dans `.env.prod.local` :
 
 ```
 SITE_INDEXABLE=true
-APP_BASE_URL=https://nidemiel.com
-TRUSTED_HOSTS=^(nidemiel\.com|www\.nidemiel\.com)$
+APP_BASE_URL=https://ziyada.fr
+TRUSTED_HOSTS=^(ziyada\.fr|www\.ziyada\.fr)$
 ```
 
 Toute tentative de démarrer l'app avec `SITE_INDEXABLE=true` et
-`TRUSTED_HOSTS=` vide, `TRUSTED_HOSTS=.*`, ou `TRUSTED_HOSTS=nidemiel\.com`
+`TRUSTED_HOSTS=` vide, `TRUSTED_HOSTS=.*`, ou `TRUSTED_HOSTS=ziyada\.fr`
 (non ancré) produira un `\InvalidArgumentException` au boot du
 container Symfony → **le déploiement échoue avant même d'exposer
 Caddy**. Défense en profondeur avant même l'injection Host.
@@ -397,14 +397,14 @@ les env vars dans le worker).
 `scripts/sitemap-audit.php` est **conçu pour un run post-déploiement**
 contre le domaine de production réel (avec certificat TLS valide et
 DNS public). En dev local, la validation TLS échoue faute de
-certificat pour `nidemiel.com` (le certificat émis par Caddy est
+certificat pour `ziyada.fr` (le certificat émis par Caddy est
 auto-signé pour `localhost`).
 
 Il n'a donc pas été exécuté dans ce rapport. À lancer manuellement
 après go-live :
 
 ```
-php scripts/sitemap-audit.php https://nidemiel.com/sitemap.xml
+php scripts/sitemap-audit.php https://ziyada.fr/sitemap.xml
 ```
 
 Exit code 0 = OK ; toute anomalie fait sortir avec code ≥ 1.
@@ -417,8 +417,8 @@ Exit code 0 = OK ; toute anomalie fait sortir avec code ≥ 1.
 
 - [x] Smoke test `EXPECTED_INDEXABLE=true` : 20/20 vérifications
 - [x] Smoke test `EXPECTED_INDEXABLE=false` : 15/15 vérifications
-- [x] Caddy adapté prod contient une route `www.nidemiel.com → 308
-      https://nidemiel.com` sans conflit d'hôte
+- [x] Caddy adapté prod contient une route `www.ziyada.fr → 308
+      https://ziyada.fr` sans conflit d'hôte
 - [x] `TRUSTED_HOSTS` vide en indexable → boot Symfony échoue (défense
       en profondeur)
 - [x] `TRUSTED_HOSTS` trop large ou non-ancré → boot Symfony échoue
@@ -430,7 +430,7 @@ Exit code 0 = OK ; toute anomalie fait sortir avec code ≥ 1.
 
 ### Actions post-déploiement (hors du périmètre de ce rapport)
 
-- Lancer `scripts/sitemap-audit.php https://nidemiel.com/sitemap.xml`
+- Lancer `scripts/sitemap-audit.php https://ziyada.fr/sitemap.xml`
   depuis un poste avec DNS public + certificat TLS valide.
 - Confirmer dans Google Search Console qu'aucune erreur « Indexed,
   though blocked by robots.txt » n'apparaît sur `/login`, `/register`,
@@ -438,7 +438,7 @@ Exit code 0 = OK ; toute anomalie fait sortir avec code ≥ 1.
 - Confirmer dans Search Console qu'aucun signalement d'AggregateRating
   factice (MGO/NPA/DHA/HMF confondu avec un avis client) — la Phase 3.1
   a supprimé ces alimentations, à vérifier post-crawl Google.
-- Confirmer que la redirection `www.nidemiel.com` → apex renvoie bien
+- Confirmer que la redirection `www.ziyada.fr` → apex renvoie bien
   308 sur toutes les URLs (échantillonner `/`, `/miels/…`, `/blog/…`,
   `/category/…`).
 

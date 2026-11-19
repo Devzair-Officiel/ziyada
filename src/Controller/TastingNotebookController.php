@@ -92,7 +92,7 @@ final class TastingNotebookController extends AbstractController
         }
 
         $seo = $this->seoResolver->forStaticPage([
-            'title'       => 'Carnet de dégustation — Nidemiel',
+            'title'       => 'Carnet de dégustation — Ziyada',
             'description' => 'Outil interne de dégustation sensorielle.',
             'route'       => 'app_tasting_notebook',
             'robots'      => 'noindex,nofollow',

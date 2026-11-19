@@ -1,6 +1,6 @@
 # Cycle de vie d'un produit — implications SEO
 
-Ce document décrit les états possibles d'un produit dans Nidemiel, les
+Ce document décrit les états possibles d'un produit dans Ziyada, les
 répercussions sur l'expérience client et sur le SEO (sitemap, JSON-LD,
 `meta robots`, statut HTTP), ainsi que les procédures recommandées côté
 administrateur.
@@ -103,7 +103,7 @@ Les colonnes déterminent le comportement des composants SEO :
   tant que des liens externes ou index anciens pointent vers l'ancienne
   URL.
 
-Nidemiel n'a pas de mécanisme automatique de redirection sur
+Ziyada n'a pas de mécanisme automatique de redirection sur
 renommage. Procédure manuelle :
 
 1. Créer la nouvelle fiche (nouveau slug).
@@ -122,7 +122,7 @@ gérée depuis l'admin si les renommages deviennent fréquents.
 
 ### 2.6 Produit supprimé sans remplaçant
 
-- **HTTP 404** (par défaut dans Nidemiel via
+- **HTTP 404** (par défaut dans Ziyada via
   [ProductController.php:54](../src/Controller/ProductController.php#L54))
   **ou HTTP 410** si l'on veut accélérer la désindexation. Actuellement
   seul 404 est implémenté.

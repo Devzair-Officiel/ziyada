@@ -527,8 +527,8 @@ final class SeoResolver
         $searchUrl = $baseUrl . '/product/search?term={search_term_string}';
 
         $canonical = $homeUrl;
-        $title = 'Nidemiel — Une sélection de miels choisis avec attention';
-        $description = 'Nidemiel propose une sélection resserrée de miels choisis pour leur origine, leur profil gustatif et la clarté des informations fournies. Miel de jujubier du Yémen, Manuka, thym, avec analyses disponibles.';
+        $title = 'Ziyada — Une sélection de miels choisis avec attention';
+        $description = 'Ziyada propose une sélection resserrée de miels choisis pour leur origine, leur profil gustatif et la clarté des informations fournies. Miel de jujubier du Yémen, Manuka, thym, avec analyses disponibles.';
         $robots = $this->indexabilityPolicy->getDefaultRobots();
         $image = $this->toAbsoluteIfNeeded($this->defaultOgImage, $request);
 

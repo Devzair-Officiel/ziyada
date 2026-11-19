@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
- * Page publique du Guide Sensoriel Nidemiel.
+ * Page publique du Guide Sensoriel Ziyada.
  * Contenu éditorial statique servi via GuideSensorielDataProvider.
  */
 final class GuideSensorielController extends AbstractController
@@ -33,12 +33,12 @@ final class GuideSensorielController extends AbstractController
         $guideUrl = $urlGenerator->generate('app_guide_sensoriel', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
         $seo = $seoResolver->forStaticPage([
-            'title'       => 'Guide Sensoriel Nidemiel — Déguster, comprendre et choisir un miel',
-            'description' => 'Apprenez à déguster un miel : textures, couleurs, familles aromatiques, roue des arômes et profils des 10 miels Nidemiel. Un guide clair, sensoriel et gourmand.',
+            'title'       => 'Guide Sensoriel Ziyada — Déguster, comprendre et choisir un miel',
+            'description' => 'Apprenez à déguster un miel : textures, couleurs, familles aromatiques, roue des arômes et profils des 10 miels Ziyada. Un guide clair, sensoriel et gourmand.',
             'route'       => 'app_guide_sensoriel',
             'breadcrumbs' => [
                 ['name' => 'Accueil', 'url' => $homeUrl],
-                ['name' => 'Le Guide Sensoriel Nidemiel', 'url' => $guideUrl],
+                ['name' => 'Le Guide Sensoriel Ziyada', 'url' => $guideUrl],
             ],
             'faq' => array_map(
                 static fn(array $f): array => ['question' => $f['question'], 'answer' => $f['answer']],

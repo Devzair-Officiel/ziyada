@@ -60,4 +60,4 @@ EOF
 echo "✓ rclone configuré."
 echo ""
 echo "Test de connexion..."
-rclone ls "backup:${RCLONE_S3_BUCKET:-nidemiel-backups}" && echo "✓ Connexion OK — bucket accessible." || echo "✗ Erreur de connexion, vérifier les credentials."
+rclone ls "backup:${RCLONE_S3_BUCKET:-ziyada-backups}" && echo "✓ Connexion OK — bucket accessible." || echo "✗ Erreur de connexion, vérifier les credentials."

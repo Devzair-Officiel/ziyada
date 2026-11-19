@@ -13,7 +13,7 @@
 # Variables d'environnement OBLIGATOIRES :
 #   EXPECTED_INDEXABLE  : "true" ou "false" (strict, aucune autre valeur).
 #   EXPECTED_CANONICAL  : URL absolue attendue pour les canonicals et JSON-LD
-#                         (ex. https://nidemiel.com). Requise même en mode
+#                         (ex. https://ziyada.fr). Requise même en mode
 #                         non-indexable pour vérifier qu'aucune URL ne fuit.
 #
 # Variables optionnelles :
@@ -25,9 +25,9 @@
 #
 # Usage :
 #   EXPECTED_INDEXABLE=true \
-#   EXPECTED_CANONICAL=https://nidemiel.com \
+#   EXPECTED_CANONICAL=https://ziyada.fr \
 #   BASE_URL=https://localhost \
-#   HOST_HEADER=nidemiel.com \
+#   HOST_HEADER=ziyada.fr \
 #   scripts/seo-smoke-test.sh
 
 set -uo pipefail
@@ -50,7 +50,7 @@ case "$EXPECTED_INDEXABLE" in
 esac
 
 if [ -z "${EXPECTED_CANONICAL:-}" ]; then
-    printf 'ERREUR: variable EXPECTED_CANONICAL non définie (ex. https://nidemiel.com).\n' >&2
+    printf 'ERREUR: variable EXPECTED_CANONICAL non définie (ex. https://ziyada.fr).\n' >&2
     exit 2
 fi
 

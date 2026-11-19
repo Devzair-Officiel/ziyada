@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 /**
- * Fournit le contenu éditorial du Guide Sensoriel Nidemiel.
+ * Fournit le contenu éditorial du Guide Sensoriel Ziyada.
  *
  * Les données sont statiques — pas de dépendance base de données.
  * Toute mise à jour éditoriale se fait ici (une seule source de vérité).
@@ -29,7 +29,7 @@ final class GuideSensorielDataProvider
             ['sensations',   'Les sensations en bouche'],
             ['accords',      'Les accords gourmands'],
             ['analyses',     'Lire une analyse de miel'],
-            ['miels',        'Les 10 miels Nidemiel'],
+            ['miels',        'Les 10 miels Ziyada'],
             ['faq',          'FAQ'],
         ];
 
@@ -54,7 +54,7 @@ final class GuideSensorielDataProvider
             'Lire une texture, une couleur et une intensité en un coup d’œil.',
             'Le vocabulaire des dix familles aromatiques et de la roue des arômes.',
             'Les accords gourmands qui révèlent chaque miel.',
-            'Le profil détaillé des dix miels de la sélection Nidemiel.',
+            'Le profil détaillé des dix miels de la sélection Ziyada.',
         ];
     }
 
@@ -237,7 +237,7 @@ final class GuideSensorielDataProvider
     }
 
     /**
-     * Miels de la sélection Nidemiel.
+     * Miels de la sélection Ziyada.
      *
      * @return list<array{
      *     name: string, origin: string, texture: string, intensity: int,
@@ -256,7 +256,7 @@ final class GuideSensorielDataProvider
                 'colorName' => 'Doré soutenu à ambré',
                 'hex'       => '#D99C2B',
                 'notes'     => ['Caramel doux', 'Datte', 'Fleur miellée', 'Finale longue'],
-                'sig'       => 'Le jujubier le plus dense et profond de la sélection Nidemiel.',
+                'sig'       => 'Le jujubier le plus dense et profond de la sélection Ziyada.',
                 'analysis'  => ['Humidité 14,2 %', 'pH 6,45', 'Conductivité 1,14 mS/cm', 'Pollen de jujubier 64 %'],
                 'url'       => '/miels/miel-de-jujubier-sidr-du-yemen',
                 'image'     => 'assets/images/placeholder.png',
@@ -415,7 +415,7 @@ final class GuideSensorielDataProvider
             ],
             [
                 'question' => 'Que signifie un pourcentage de pollen dans une analyse de miel ?',
-                'answer'   => 'Un pourcentage de pollen indique la part de certains pollens observés dans l’échantillon analysé. Il aide à comprendre l’origine botanique du miel, mais il ne doit pas être confondu avec un pourcentage de nectar. Chez Nidemiel, cette distinction est importante pour rester précis et transparent.',
+                'answer'   => 'Un pourcentage de pollen indique la part de certains pollens observés dans l’échantillon analysé. Il aide à comprendre l’origine botanique du miel, mais il ne doit pas être confondu avec un pourcentage de nectar. Chez Ziyada, cette distinction est importante pour rester précis et transparent.',
             ],
             [
                 'question' => 'La couleur d’un miel indique-t-elle son goût ?',

@@ -39,7 +39,7 @@ Disallow: /verify/
 Disallow: /connect/
 Disallow: /logout
 
-Sitemap: https://nidemiel.com/sitemap.xml
+Sitemap: https://ziyada.fr/sitemap.xml
 ```
 
 En mode non indexable (`SITE_INDEXABLE=false`) : `User-agent: * / Disallow: /`.
@@ -126,7 +126,7 @@ Les crawlers IA ne sont **pas** tous équivalents. Le tableau suivant
 remplace toute mention indistincte de « crawlers IA » dans les rapports
 précédents.
 
-| Crawler          | Rôle réel                                                                                      | Impact sur la présence dans les fonctions de recherche                             | Politique Nidemiel |
+| Crawler          | Rôle réel                                                                                      | Impact sur la présence dans les fonctions de recherche                             | Politique Ziyada |
 | ---------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------ |
 | `Googlebot`      | Crawler principal Google                                                                       | Détermine l'éligibilité à Google Search, aux **AI Overviews** et à **AI Mode**     | **Autorisé** (Allow /) |
 | `Google-Extended` | Signal opt-out réservé à l'entraînement et à Gemini/Vertex AI                                 | **N'affecte PAS** l'éligibilité à Google Search, AI Overviews et AI Mode           | **Autorisé** implicitement (pas de bloc dédié) |
@@ -154,7 +154,7 @@ précédents.
   avec le fait qu'un utilisateur agit en son nom propre. Aucune règle
   robots.txt ne les empêchera de charger une URL publique.
 
-**Politique actuelle Nidemiel** : aucun bot IA n'est bloqué. Tous
+**Politique actuelle Ziyada** : aucun bot IA n'est bloqué. Tous
 tombent sous `User-agent: * / Allow: /`. Aucune règle spécifique
 n'est nécessaire tant que la stratégie éditoriale reste « présence
 maximale ».
@@ -237,8 +237,8 @@ Nouveau fichier versionné :
 [frankenphp/Caddyfile.prod](../frankenphp/Caddyfile.prod).
 
 ```caddy
-www.nidemiel.com {
-    redir https://nidemiel.com{uri} 308
+www.ziyada.fr {
+    redir https://ziyada.fr{uri} 308
 }
 ```
 
@@ -251,7 +251,7 @@ seule et l'injecte dans la config Caddy globale :
 services:
   php:
     environment:
-      SERVER_NAME: "nidemiel.com, www.nidemiel.com"
+      SERVER_NAME: "ziyada.fr, www.ziyada.fr"
       CADDY_EXTRA_CONFIG: "import /etc/frankenphp/Caddyfile.prod"
     volumes:
       - ./frankenphp/Caddyfile.prod:/etc/frankenphp/Caddyfile.prod:ro
@@ -260,13 +260,13 @@ services:
 Effet attendu en production :
 
 ```
-curl -I https://www.nidemiel.com/
+curl -I https://www.ziyada.fr/
 → HTTP/2 308
-→ location: https://nidemiel.com/
+→ location: https://ziyada.fr/
 
-curl -I https://www.nidemiel.com/miels/miel-lavande
+curl -I https://www.ziyada.fr/miels/miel-lavande
 → HTTP/2 308
-→ location: https://nidemiel.com/miels/miel-lavande
+→ location: https://ziyada.fr/miels/miel-lavande
 ```
 
 ### 4.3 Test avant déploiement
@@ -289,8 +289,8 @@ reconstruction du VPS repartira du même fragment versionné.
 | Environnement          | TRUSTED_HOSTS                                                     |
 | ---------------------- | ----------------------------------------------------------------- |
 | Local / dev            | (vide) — pas de garde Symfony, on tolère localhost                |
-| Simulation prod locale | `^(nidemiel\.com|www\.nidemiel\.com|localhost)$` (via `.env.dev.local` temporaire) |
-| **Production réelle**  | `^(nidemiel\.com|www\.nidemiel\.com)$` — **pas de localhost**     |
+| Simulation prod locale | `^(ziyada\.fr|www\.ziyada\.fr|localhost)$` (via `.env.dev.local` temporaire) |
+| **Production réelle**  | `^(ziyada\.fr|www\.ziyada\.fr)$` — **pas de localhost**     |
 
 ### 5.2 Validation au boot
 
@@ -303,7 +303,7 @@ regex trop laxe échoue immédiatement (au boot du conteneur).
 `.env.prod.local` a été mis à jour :
 
 ```
-TRUSTED_HOSTS=^(nidemiel\.com|www\.nidemiel\.com)$
+TRUSTED_HOSTS=^(ziyada\.fr|www\.ziyada\.fr)$
 ```
 
 Sans `localhost` — cohérent avec la règle.
@@ -391,7 +391,7 @@ Détail des ajouts Phase 3.1 :
 ▶ robots.txt
   ✓ robots.txt renvoie HTTP 200
   ! Aucune règle explicite pour OAI-SearchBot dans robots.txt
-  ✓ Ligne Sitemap présente : https://nidemiel.com/sitemap.xml
+  ✓ Ligne Sitemap présente : https://ziyada.fr/sitemap.xml
   ✓ Toutes les directives Allow/Disallow contiennent un seul chemin
 
 ▶ Meta robots sur /
@@ -420,7 +420,7 @@ Total : 9 vérifications, 0 échec(s)
 | `src/Seo/IndexabilityPolicy.php`                         | Modifié | Validation TRUSTED_HOSTS + injection paramètre     |
 | `config/services.yaml`                                   | Modifié | Bind `app.trusted_hosts` sur IndexabilityPolicy    |
 | `scripts/seo-smoke-test.sh`                              | Modifié | Nouveau validateur syntaxe robots (1 chemin/ligne) |
-| `frankenphp/Caddyfile.prod`                              | Nouveau | Redirect 308 `www.nidemiel.com` → apex             |
+| `frankenphp/Caddyfile.prod`                              | Nouveau | Redirect 308 `www.ziyada.fr` → apex             |
 | `compose.prod.yaml`                                      | Modifié | Bind-mount `Caddyfile.prod` + `SERVER_NAME` + `CADDY_EXTRA_CONFIG` |
 | `.env.prod.local`                                        | Modifié | `TRUSTED_HOSTS` sans `localhost`                   |
 | `tests/Unit/Seo/IndexabilityPolicyTest.php`              | Modifié | +6 tests TRUSTED_HOSTS                             |
@@ -431,8 +431,8 @@ Total : 9 vérifications, 0 échec(s)
 
 ## 11. Conditions de mise en production restantes
 
-1. **Provisionner le DNS de `www.nidemiel.com`** vers la même IP que
-   `nidemiel.com`. Caddy s'occupera d'émettre le certificat TLS et de
+1. **Provisionner le DNS de `www.ziyada.fr`** vers la même IP que
+   `ziyada.fr`. Caddy s'occupera d'émettre le certificat TLS et de
    servir le 308.
 2. **Validation éditoriale Manuka MGO** avant de mettre la fiche en
    ligne (voir §3.3).

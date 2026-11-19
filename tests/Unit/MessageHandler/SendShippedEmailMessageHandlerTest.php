@@ -50,7 +50,7 @@ class SendShippedEmailMessageHandlerTest extends TestCase
             new NullLogger(),
             $this->createStub(EntityManagerInterface::class),
             'contact@example.com',
-            'Nidemiel',
+            'Ziyada',
         );
     }
 

@@ -88,7 +88,7 @@ final class SettingCrudController extends AbstractCrudController
 
         $copyright = TextField::new("copyright", "Droits d'auteur")
             ->setColumns(4)
-            ->setHelp('Ex: © 2025 Nidemiel — Tous droits réservés');
+            ->setHelp('Ex: © 2025 Ziyada — Tous droits réservés');
 
         $copyrightUrl = UrlField::new("copyrightUrl", "Lien droits d'auteur")
             ->setColumns(4)

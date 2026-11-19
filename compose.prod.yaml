@@ -11,7 +11,7 @@ services:
     environment:
       APP_ENV: prod
       # HTTP simple : le TLS est terminé par le reverse proxy externe (réseau `web`)
-      # qui transmet à nidemiel_php:80. Un nom de domaine ici activerait l'auto-HTTPS
+      # qui transmet à ziyada_php:80. Un nom de domaine ici activerait l'auto-HTTPS
       # de Caddy (ACME impossible + redirection HTTP→HTTPS en boucle derrière le proxy).
       # La redirection www → apex est gérée dans frankenphp/Caddyfile via CANONICAL_HOST.
       SERVER_NAME: ":80"
@@ -22,7 +22,7 @@ services:
       default:
       web:
         aliases:
-          - nidemiel_php
+          - ziyada_php
 
   messenger-worker:
     env_file:

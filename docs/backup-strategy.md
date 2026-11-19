@@ -18,7 +18,7 @@
 
 | Paramètre | Valeur |
 |-----------|--------|
-| Bucket | `nidemiel-backups` |
+| Bucket | `ziyada-backups` |
 | Région | Paris (`eu-west-par`) |
 | Endpoint | `s3.eu-west-par.io.cloud.ovh.net` |
 | Accès | Privé (jamais public) |
@@ -37,7 +37,7 @@ RCLONE_S3_ACCESS_KEY=ta_cle_acces_ovh
 RCLONE_S3_SECRET_KEY=ta_cle_secrete_ovh
 RCLONE_S3_ENDPOINT=s3.eu-west-par.io.cloud.ovh.net
 RCLONE_S3_REGION=eu-west-par
-RCLONE_S3_BUCKET=nidemiel-backups
+RCLONE_S3_BUCKET=ziyada-backups
 ```
 
 ### 2. Configurer rclone
@@ -63,7 +63,7 @@ Vérifie que :
 - Les fichiers apparaissent dans le bucket OVH
 
 ```bash
-rclone ls backup:nidemiel-backups
+rclone ls backup:ziyada-backups
 ```
 
 ### 4. Planifier le cron quotidien
@@ -88,10 +88,10 @@ crontab -e
 ls -lh backups/db_*.sql.gz
 
 # Ou depuis OVH directement
-rclone ls backup:nidemiel-backups
+rclone ls backup:ziyada-backups
 
 # Télécharger un backup depuis OVH si nécessaire
-rclone copy backup:nidemiel-backups/db_my-commerce_20260415_030000.sql.gz ./restore/
+rclone copy backup:ziyada-backups/db_my-commerce_20260415_030000.sql.gz ./restore/
 
 # Restaurer
 gunzip -c backups/db_my-commerce_YYYYMMDD_HHMMSS.sql.gz | \
@@ -153,5 +153,5 @@ docker compose up -d
 tail -50 /var/log/backup.log
 
 # Vérifier le contenu du bucket OVH
-rclone ls backup:nidemiel-backups --human-readable
+rclone ls backup:ziyada-backups --human-readable
 ```

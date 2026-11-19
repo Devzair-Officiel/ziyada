@@ -1,4 +1,4 @@
-# Audit SEO Nidemiel — Phase 2 : corrections vérifiées
+# Audit SEO Ziyada — Phase 2 : corrections vérifiées
 
 **Date :** 2026-07-12 · **Branche :** main · **APP_ENV :** dev (container `my-commerce-php-1` sur ports 80/443)
 
@@ -65,7 +65,7 @@ App\Seo\IndexabilityPolicy:
 **Fichier :** [.env:48-56](.env#L48-L56)
 ```env
 ###> app ###
-APP_SITE_NAME=Nidemiel
+APP_SITE_NAME=Ziyada
 # Autorise l'indexation SEO du site entier (moteurs de recherche + IA).
 # Par défaut : false (bloque tout en pré-prod). Passer à `true` uniquement pour la prod publique.
 SITE_INDEXABLE=false
@@ -146,7 +146,7 @@ $price = $effectivePriceCents !== null
   "price":"39.90",
   "availability":"https://schema.org/InStock",
   "itemCondition":"https://schema.org/NewCondition",
-  "seller":{"@type":"Organization","name":"Nidemiel"}
+  "seller":{"@type":"Organization","name":"Ziyada"}
 }
 ```
 
@@ -321,7 +321,7 @@ Aucun commit créé, aucun push, aucun secret modifié.
 ## 13. Reste à faire avant go-live (hors périmètre phase 2)
 
 1. **Basculer `SITE_INDEXABLE=true`** dans `.env.prod.local` uniquement le jour du go-live. Vérifier au préalable :
-   - `APP_BASE_URL=https://nidemiel.com` défini en prod
+   - `APP_BASE_URL=https://ziyada.fr` défini en prod
    - Google Search Console propriété créée, DNS TXT posé
    - Sitemap soumis manuellement à Google
 2. **Titre hero Guide Sensoriel** ([templates/guide/sensoriel.html.twig:29](templates/guide/sensoriel.html.twig#L29)) — décider : le retirer (l'H1 de `page_head` suffit) ou le transformer en tagline (`<p>`).

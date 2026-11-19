@@ -46,7 +46,7 @@ class SendRefundEmailMessageHandlerTest extends TestCase
             $mailer,
             new NullLogger(),
             'contact@example.com',
-            'Nidemiel',
+            'Ziyada',
         );
     }
 

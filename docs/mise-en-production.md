@@ -58,9 +58,9 @@ STRIPE_PUBLIC_KEY=pk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...   # Recréer le webhook sur dashboard.stripe.com
 
 # Email OVH
-MAILER_DSN=smtp://contact@nidemiel.com:MOT_DE_PASSE@ssl0.ovh.net:465?encryption=ssl
-MAILER_SENDER_EMAIL=contact@nidemiel.com
-MAILER_SENDER_NAME=Nidemiel
+MAILER_DSN=smtp://contact@ziyada.fr:MOT_DE_PASSE@ssl0.ovh.net:465?encryption=ssl
+MAILER_SENDER_EMAIL=contact@ziyada.fr
+MAILER_SENDER_NAME=Ziyada
 
 # Colissimo
 COLISSIMO_LOGIN=
@@ -75,7 +75,7 @@ RCLONE_S3_ACCESS_KEY=
 RCLONE_S3_SECRET_KEY=
 RCLONE_S3_ENDPOINT=s3.eu-west-par.io.cloud.ovh.net
 RCLONE_S3_REGION=eu-west-par
-RCLONE_S3_BUCKET=nidemiel-backups
+RCLONE_S3_BUCKET=ziyada-backups
 ```
 
 > ⚠️ Sauvegarder ce fichier dans un gestionnaire de mots de passe (Bitwarden, 1Password).
@@ -166,7 +166,7 @@ crontab -e
 ## Étape 8 — Configurer le webhook Stripe
 
 1. Aller sur [dashboard.stripe.com](https://dashboard.stripe.com) → Développeurs → Webhooks
-2. Ajouter un endpoint : `https://nidemiel.com/webhooks/stripe`
+2. Ajouter un endpoint : `https://ziyada.fr/webhooks/stripe`
 3. Événements à écouter :
    - `payment_intent.succeeded`
    - `payment_intent.payment_failed`
@@ -182,7 +182,7 @@ crontab -e
 | A | `@` | IP de ton serveur |
 | A | `www` | IP de ton serveur |
 | TXT | `@` | `v=spf1 include:mx.ovh.com ~all` |
-| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:contact@nidemiel.com` |
+| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:contact@ziyada.fr` |
 
 Voir `docs/email-spf-dkim-dmarc.md` pour le détail complet.
 
@@ -192,9 +192,9 @@ Voir `docs/email-spf-dkim-dmarc.md` pour le détail complet.
 
 1. Créer un compte sur [uptimerobot.com](https://uptimerobot.com)
 2. Ajouter 3 moniteurs HTTPS (intervalle 5 min) :
-   - `https://nidemiel.com`
-   - `https://nidemiel.com/boutique`
-   - `https://nidemiel.com/sitemap.xml`
+   - `https://ziyada.fr`
+   - `https://ziyada.fr/boutique`
+   - `https://ziyada.fr/sitemap.xml`
 
 Voir `docs/monitoring.md` pour le détail.
 
@@ -221,8 +221,8 @@ Depuis l'admin (`/admin`), créer les 3 pages statiques :
 - [ ] Tester la livraison à domicile + point relais
 - [ ] Vérifier que les factures PDF se génèrent
 - [ ] Tester `php bin/console sentry:test` → vérifier la réception de l'alerte
-- [ ] Vérifier `https://nidemiel.com/sitemap.xml`
-- [ ] Vérifier `https://nidemiel.com/robots.txt`
+- [ ] Vérifier `https://ziyada.fr/sitemap.xml`
+- [ ] Vérifier `https://ziyada.fr/robots.txt`
 - [ ] Tester la délivrabilité email sur [mail-tester.com](https://mail-tester.com)
 
 ---
@@ -320,7 +320,7 @@ Cherche la ligne `[critical]` — c'est là qu'est l'erreur réelle.
 Le `MAILER_DSN` est vide ou mal formé dans `.env.prod.local`.
 Le `@` de l'email doit être encodé en `%40` dans l'URL :
 ```
-MAILER_DSN=smtp://contact%40nidemiel.com:MOTDEPASSE@ssl0.ovh.net:465?encryption=ssl
+MAILER_DSN=smtp://contact%40ziyada.fr:MOTDEPASSE@ssl0.ovh.net:465?encryption=ssl
 ```
 
 ### `could not find driver` / base de données inaccessible

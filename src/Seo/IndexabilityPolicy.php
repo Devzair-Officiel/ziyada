@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
  * du site entier, fournit la directive robots par défaut et l'URL de base canonique.
  *
  * - `SITE_INDEXABLE`  : "1"/"true" pour autoriser l'indexation, sinon bloque tout le site.
- * - `APP_BASE_URL`    : URL absolue du site (schéma + host, ex. https://nidemiel.com).
+ * - `APP_BASE_URL`    : URL absolue du site (schéma + host, ex. https://ziyada.fr).
  *                       OBLIGATOIRE quand `SITE_INDEXABLE=true` : sinon les canonicals et
  *                       le sitemap dépendraient du Host HTTP, ce qui expose à l'injection
  *                       de canonical via un faux header Host.
@@ -20,7 +20,7 @@ final class IndexabilityPolicy
 {
     /**
      * Hostnames toujours refusés dans APP_BASE_URL quand le site est indexable.
-     * Une preview *.vercel.app / *.nidemiel-preview.com etc. doit rester en SITE_INDEXABLE=false.
+     * Une preview *.vercel.app / *.ziyada-preview.fr etc. doit rester en SITE_INDEXABLE=false.
      */
     private const FORBIDDEN_HOST_PATTERNS = [
         '/^localhost$/i',
@@ -116,7 +116,7 @@ final class IndexabilityPolicy
             if ($this->siteIndexable) {
                 throw new \InvalidArgumentException(
                     'APP_BASE_URL est obligatoire quand SITE_INDEXABLE=true. '
-                    . 'Définir par exemple APP_BASE_URL=https://nidemiel.com.'
+                    . 'Définir par exemple APP_BASE_URL=https://ziyada.fr.'
                 );
             }
 
@@ -177,7 +177,7 @@ final class IndexabilityPolicy
         if ($trimmed === '') {
             throw new \InvalidArgumentException(
                 'TRUSTED_HOSTS est obligatoire quand SITE_INDEXABLE=true. '
-                . 'Définir par exemple TRUSTED_HOSTS=^(nidemiel\\.com|www\\.nidemiel\\.com)$.'
+                . 'Définir par exemple TRUSTED_HOSTS=^(ziyada\\.com|www\\.ziyada\\.com)$.'
             );
         }
 
@@ -201,7 +201,7 @@ final class IndexabilityPolicy
                 throw new \InvalidArgumentException(sprintf(
                     'TRUSTED_HOSTS "%s" contient un motif non public ("%s"). '
                     . 'En prod publique (SITE_INDEXABLE=true), n\'autoriser que le domaine canonique '
-                    . '(ex. ^(nidemiel\\.com|www\\.nidemiel\\.com)$).',
+                    . '(ex. ^(ziyada\\.com|www\\.ziyada\\.com)$).',
                     $trimmed,
                     $needle
                 ));
@@ -220,18 +220,18 @@ final class IndexabilityPolicy
             if (preg_match($regex, $trimmed) === 1) {
                 throw new \InvalidArgumentException(sprintf(
                     'TRUSTED_HOSTS "%s" est trop permissif (matche potentiellement tout Host header). '
-                    . 'Utiliser un regex ancré et restrictif comme ^(nidemiel\\.com|www\\.nidemiel\\.com)$.',
+                    . 'Utiliser un regex ancré et restrictif comme ^(ziyada\\.com|www\\.ziyada\\.com)$.',
                     $trimmed
                 ));
             }
         }
 
-        // Refuser un regex non ancré (sans ^ ou sans $) : sinon "nidemiel.com" matche
-        // aussi "evil.nidemiel.com.attacker.example".
+        // Refuser un regex non ancré (sans ^ ou sans $) : sinon "ziyada.fr" matche
+        // aussi "evil.ziyada.fr.attacker.example".
         if (!str_starts_with($trimmed, '^') || !str_ends_with($trimmed, '$')) {
             throw new \InvalidArgumentException(sprintf(
                 'TRUSTED_HOSTS "%s" doit être un regex ancré (commencer par ^ et finir par $). '
-                . 'Exemple : ^(nidemiel\\.com|www\\.nidemiel\\.com)$.',
+                . 'Exemple : ^(ziyada\\.com|www\\.ziyada\\.com)$.',
                 $trimmed
             ));
         }

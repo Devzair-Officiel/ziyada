@@ -27,8 +27,8 @@ final class IndexabilityPolicyTest extends TestCase
     {
         $policy = new IndexabilityPolicy(
             true,
-            'https://nidemiel.com',
-            '^(nidemiel\.com|www\.nidemiel\.com)$'
+            'https://ziyada.fr',
+            '^(ziyada\.fr|www\.ziyada\.fr)$'
         );
 
         self::assertTrue($policy->isSiteIndexable());
@@ -44,23 +44,23 @@ final class IndexabilityPolicyTest extends TestCase
     {
         $policy = new IndexabilityPolicy(
             true,
-            'https://nidemiel.com/',
-            '^(nidemiel\.com|www\.nidemiel\.com)$'
+            'https://ziyada.fr/',
+            '^(ziyada\.fr|www\.ziyada\.fr)$'
         );
 
-        self::assertSame('https://nidemiel.com', $policy->getBaseUrl());
+        self::assertSame('https://ziyada.fr', $policy->getBaseUrl());
     }
 
     public function testConfiguredBaseUrlIsAlwaysPreferredOverRequest(): void
     {
         $policy = new IndexabilityPolicy(
             true,
-            'https://nidemiel.com',
-            '^(nidemiel\.com|www\.nidemiel\.com)$'
+            'https://ziyada.fr',
+            '^(ziyada\.fr|www\.ziyada\.fr)$'
         );
         $spoofedRequest = Request::create('https://attacker.example/');
 
-        self::assertSame('https://nidemiel.com', $policy->getBaseUrl($spoofedRequest));
+        self::assertSame('https://ziyada.fr', $policy->getBaseUrl($spoofedRequest));
     }
 
     public function testFallbackToRequestOnlyAllowedWhenNotIndexable(): void
@@ -84,7 +84,7 @@ final class IndexabilityPolicyTest extends TestCase
     // sur APP_BASE_URL. La constante VALID_TRUSTED_HOSTS ci-dessous représente la
     // valeur attendue en production réelle.
 
-    private const VALID_TRUSTED_HOSTS = '^(nidemiel\.com|www\.nidemiel\.com)$';
+    private const VALID_TRUSTED_HOSTS = '^(ziyada\.fr|www\.ziyada\.fr)$';
 
     public function testIndexableWithEmptyBaseUrlThrows(): void
     {
@@ -107,7 +107,7 @@ final class IndexabilityPolicyTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('doit utiliser HTTPS');
 
-        new IndexabilityPolicy(true, 'http://nidemiel.com', self::VALID_TRUSTED_HOSTS);
+        new IndexabilityPolicy(true, 'http://ziyada.fr', self::VALID_TRUSTED_HOSTS);
     }
 
     public function testIndexableWithLocalhostThrows(): void
@@ -139,7 +139,7 @@ final class IndexabilityPolicyTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('hôte non public');
 
-        new IndexabilityPolicy(true, 'https://preview.nidemiel.com', self::VALID_TRUSTED_HOSTS);
+        new IndexabilityPolicy(true, 'https://preview.ziyada.fr', self::VALID_TRUSTED_HOSTS);
     }
 
     public function testIndexableWithStagingSubdomainThrows(): void
@@ -147,7 +147,7 @@ final class IndexabilityPolicyTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('hôte non public');
 
-        new IndexabilityPolicy(true, 'https://staging.nidemiel.com', self::VALID_TRUSTED_HOSTS);
+        new IndexabilityPolicy(true, 'https://staging.ziyada.fr', self::VALID_TRUSTED_HOSTS);
     }
 
     public function testIndexableWithMalformedUrlThrows(): void
@@ -171,8 +171,8 @@ final class IndexabilityPolicyTest extends TestCase
     {
         $policy = new IndexabilityPolicy(
             true,
-            'https://nidemiel.com',
-            '^(nidemiel\.com|www\.nidemiel\.com)$'
+            'https://ziyada.fr',
+            '^(ziyada\.fr|www\.ziyada\.fr)$'
         );
 
         self::assertTrue($policy->isSiteIndexable());
@@ -185,8 +185,8 @@ final class IndexabilityPolicyTest extends TestCase
 
         new IndexabilityPolicy(
             true,
-            'https://nidemiel.com',
-            '^(nidemiel\.com|www\.nidemiel\.com|localhost)$'
+            'https://ziyada.fr',
+            '^(ziyada\.fr|www\.ziyada\.fr|localhost)$'
         );
     }
 
@@ -197,8 +197,8 @@ final class IndexabilityPolicyTest extends TestCase
 
         new IndexabilityPolicy(
             true,
-            'https://nidemiel.com',
-            '^(nidemiel\.com|127\.0\.0\.1)$'
+            'https://ziyada.fr',
+            '^(ziyada\.fr|127\.0\.0\.1)$'
         );
     }
 
@@ -209,8 +209,8 @@ final class IndexabilityPolicyTest extends TestCase
 
         new IndexabilityPolicy(
             true,
-            'https://nidemiel.com',
-            '^(nidemiel\.com|preview.nidemiel\.com)$'
+            'https://ziyada.fr',
+            '^(ziyada\.fr|preview.ziyada\.fr)$'
         );
     }
 
@@ -220,7 +220,7 @@ final class IndexabilityPolicyTest extends TestCase
         $policy = new IndexabilityPolicy(
             false,
             null,
-            '^(localhost|preview\.nidemiel\.com)$'
+            '^(localhost|preview\.ziyada\.fr)$'
         );
 
         self::assertFalse($policy->isSiteIndexable());
@@ -233,7 +233,7 @@ final class IndexabilityPolicyTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('TRUSTED_HOSTS est obligatoire');
 
-        new IndexabilityPolicy(true, 'https://nidemiel.com', '');
+        new IndexabilityPolicy(true, 'https://ziyada.fr', '');
     }
 
     public function testIndexableTrustedHostsTooBroadDotStarThrows(): void
@@ -241,7 +241,7 @@ final class IndexabilityPolicyTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('trop permissif');
 
-        new IndexabilityPolicy(true, 'https://nidemiel.com', '.*');
+        new IndexabilityPolicy(true, 'https://ziyada.fr', '.*');
     }
 
     public function testIndexableTrustedHostsTooBroadAnchoredDotStarThrows(): void
@@ -249,7 +249,7 @@ final class IndexabilityPolicyTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('trop permissif');
 
-        new IndexabilityPolicy(true, 'https://nidemiel.com', '^.*$');
+        new IndexabilityPolicy(true, 'https://ziyada.fr', '^.*$');
     }
 
     public function testIndexableTrustedHostsTooBroadDotPlusThrows(): void
@@ -257,16 +257,16 @@ final class IndexabilityPolicyTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('trop permissif');
 
-        new IndexabilityPolicy(true, 'https://nidemiel.com', '.+');
+        new IndexabilityPolicy(true, 'https://ziyada.fr', '.+');
     }
 
     public function testIndexableTrustedHostsUnanchoredThrows(): void
     {
-        // "nidemiel.com" sans ancre matche "evil.nidemiel.com.attacker.example".
+        // "ziyada.fr" sans ancre matche "evil.ziyada.fr.attacker.example".
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('ancré');
 
-        new IndexabilityPolicy(true, 'https://nidemiel.com', 'nidemiel\.com');
+        new IndexabilityPolicy(true, 'https://ziyada.fr', 'ziyada\.fr');
     }
 
     public function testIndexableTrustedHostsMissingEndAnchorThrows(): void
@@ -274,7 +274,7 @@ final class IndexabilityPolicyTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('ancré');
 
-        new IndexabilityPolicy(true, 'https://nidemiel.com', '^nidemiel\.com');
+        new IndexabilityPolicy(true, 'https://ziyada.fr', '^ziyada\.fr');
     }
 
     public function testIndexableTrustedHostsMissingStartAnchorThrows(): void
@@ -282,7 +282,7 @@ final class IndexabilityPolicyTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('ancré');
 
-        new IndexabilityPolicy(true, 'https://nidemiel.com', 'nidemiel\.com$');
+        new IndexabilityPolicy(true, 'https://ziyada.fr', 'ziyada\.fr$');
     }
 
     public function testNonIndexableAcceptsEmptyTrustedHosts(): void

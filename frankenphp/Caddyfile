@@ -29,7 +29,7 @@
 	root /app/public
 	encode zstd br gzip
 
-	# Redirection permanente www → domaine canonique (ex. www.nidemiel.com → nidemiel.com).
+	# Redirection permanente www → domaine canonique (ex. www.ziyada.fr → ziyada.fr).
 	# Inactive si CANONICAL_HOST est vide (dev) : le matcher devient `host www.` et ne matche rien.
 	# Le reverse proxy externe doit aussi router www.<domaine> vers ce conteneur.
 	@wwwHost host www.{$CANONICAL_HOST}

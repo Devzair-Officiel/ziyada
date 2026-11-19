@@ -28,7 +28,7 @@ final class GrossisteController extends AbstractController
         $faqs     = $this->faqRepo->findActiveWholesale();
 
         $seo = $this->seoResolver->forStaticPage([
-            'title'       => 'Miel en gros pour professionnels — Nidemiel',
+            'title'       => 'Miel en gros pour professionnels — Ziyada',
             'description' => 'Approvisionnement de miels sélectionnés pour épiceries, restaurants et revendeurs. Tarifs dégressifs, analyses laboratoire disponibles, livraison France.',
             'route'       => 'app_grossiste_index',
             'breadcrumbs' => [
@@ -65,7 +65,7 @@ final class GrossisteController extends AbstractController
         $media           = array_values(($wholesaleImages->count() > 0 ? $wholesaleImages : $allImages)->toArray());
 
         $seo = $this->seoResolver->forStaticPage([
-            'title'       => sprintf('%s en gros — Nidemiel', $product->getTitle()),
+            'title'       => sprintf('%s en gros — Ziyada', $product->getTitle()),
             'description' => sprintf('Achetez %s en volume pour votre activité : conditionnements pro, tarifs dégressifs, traçabilité complète.', $product->getTitle()),
             'canonical'   => $this->generateUrl('app_grossiste_product', ['slug' => $slug], \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_URL),
             'breadcrumbs' => [
