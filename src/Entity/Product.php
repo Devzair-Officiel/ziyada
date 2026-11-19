@@ -1,0 +1,868 @@
+<?php
+
+namespace App\Entity;
+
+use App\Trait\SeoFieldsTrait;
+use App\Trait\DateTrait;
+use App\Entity\ProductLot;
+use App\Entity\WholesaleTier;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
+use App\Repository\ProductRepository;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+
+/**
+ * Entité centrale du catalogue : produit de miel avec prix, stock, catégories, médias et champs SEO.
+ */
+#[ORM\HasLifecycleCallbacks]
+#[ORM\Entity(repositoryClass: ProductRepository::class)]
+#[ORM\UniqueConstraint(name: 'uniq_product_slug', columns: ['slug'])]
+#[Assert\Callback('validatePricing')]
+class Product
+{
+    use DateTrait, SeoFieldsTrait;
+
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    private ?int $id = null;
+
+    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le titre est obligatoire.')]
+    #[Assert\Length(
+        min: 2,
+        max: 255,
+        minMessage: 'Le titre doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'Le titre ne doit pas dépasser {{ limit }} caractères.'
+    )]
+    private ?string $title = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $slug = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $accroche = null;
+
+    #[ORM\Column(type: Types::TEXT)]
+    #[Assert\NotBlank(message: 'La description est obligatoire.')]
+    #[Assert\Length(
+        min: 10,
+        minMessage: 'La description doit contenir au moins {{ limit }} caractères.',
+    )]
+    private ?string $description = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(
+        max: 10000,
+        maxMessage: 'La description détaillée ne doit pas dépasser {{ limit }} caractères.'
+    )]
+    private ?string $more_description = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(
+        max: 10000,
+        maxMessage: 'Les infos additionnelles ne doivent pas dépasser {{ limit }} caractères.'
+    )]
+    private ?string $additional_infos = null;
+
+    #[ORM\Column(length: 80, nullable: true)]
+    private ?string $originCountry = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Length(max: 150, maxMessage: 'Le profil gustatif ne doit pas dépasser {{ limit }} caractères.')]
+    private ?string $tastingProfile = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Assert\Range(min: 0, max: 100)]
+    private ?int $tastingIntensity = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Assert\Range(min: 0, max: 100)]
+    private ?int $tastingAromatic = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Assert\Range(min: 0, max: 100)]
+    private ?int $tastingSweetness = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Assert\Range(min: 0, max: 100)]
+    private ?int $tastingFluidity = null;
+
+    #[ORM\Column(length: 500, nullable: true)]
+    private ?string $tastingTags = null;
+
+    #[ORM\Column(length: 150, nullable: true)]
+    #[Assert\Length(max: 150, maxMessage: 'La texture ne doit pas dépasser {{ limit }} caractères.')]
+    private ?string $textureLabel = null;
+
+    #[ORM\Column(length: 80, nullable: true)]
+    #[Assert\Length(max: 80, maxMessage: 'La couleur ne doit pas dépasser {{ limit }} caractères.')]
+    private ?string $colorLabel = null;
+
+    #[ORM\Column(length: 500, nullable: true)]
+    #[Assert\Length(max: 500, maxMessage: 'Les notes aromatiques ne doivent pas dépasser {{ limit }} caractères.')]
+    private ?string $aromaticNotes = null;
+
+    #[ORM\Column(length: 500, nullable: true)]
+    #[Assert\Length(max: 500, maxMessage: 'Les suggestions de dégustation ne doivent pas dépasser {{ limit }} caractères.')]
+    private ?string $tastingSuggestion = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?bool $hasLabAnalysis = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $labAnalysis = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Assert\PositiveOrZero(message: 'Le stock ne peut pas être négatif.')]
+    private ?int $stock = null;
+
+    #[ORM\Column(type: 'integer', nullable: true)]
+    #[Assert\Positive(message: 'Le poids doit être strictement positif.')]
+    private ?int $weightGrams = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Assert\Positive(message: 'Le prix soldé doit être strictement positif.')]
+    private ?int $solde_price = null;
+
+    #[ORM\Column]
+    #[Assert\NotNull(message: 'Le prix régulier est obligatoire.')]
+    #[Assert\Positive(message: 'Le prix régulier doit être strictement positif.')]
+    private ?int $regular_price = null;
+
+    /**
+     * @var Collection<int, Category>
+     */
+    #[ORM\ManyToMany(targetEntity: Category::class, inversedBy: 'products')]
+    private Collection $categories;
+
+    #[ORM\Column(nullable: true)]
+    private ?bool $isAvailable = true;
+
+    #[ORM\Column(nullable: true)]
+    private ?bool $isBestSeller = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?bool $isNewArrival = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?bool $isFeatured = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?bool $isSpecialOffer = null;
+
+    /**
+     * Motif court affiché sur la carte / ruban ("Qualité insuffisante", "Lot défectueux"…).
+     * Sert d'accroche visible. Le détail va dans qualityHoldReason.
+     */
+    #[ORM\Column(length: 80, nullable: true)]
+    #[Assert\Length(max: 80, maxMessage: 'Le motif court ne doit pas dépasser {{ limit }} caractères.')]
+    private ?string $qualityHoldLabel = null;
+
+    /**
+     * Explication détaillée affichée dans la modal quand le miel est mis en pause qualité.
+     * Non renseigné = pas de mise en pause qualité.
+     */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $qualityHoldReason = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?bool $isWholesaleAvailable = false;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $wholesaleDescription = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Assert\Positive(message: 'La quantité minimale doit être positive.')]
+    private ?int $wholesaleMinQtyKg = null;
+
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $wholesaleFormats = null;
+
+    /**
+     * @var Collection<int, WholesaleTier>
+     */
+    #[ORM\OneToMany(mappedBy: 'product', targetEntity: WholesaleTier::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['minQtyKg' => 'ASC'])]
+    private Collection $wholesaleTiers;
+
+    /**
+     * @var Collection<int, Media>
+     */
+    #[ORM\OneToMany(mappedBy: 'product', targetEntity: Media::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['position' => 'ASC', 'id' => 'ASC'])]
+    private Collection $medias;
+
+    #[ORM\ManyToMany(targetEntity: self::class)]
+    #[ORM\JoinTable(name: 'product_related')]
+    #[ORM\JoinColumn(name: 'product_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'related_product_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    private Collection $relatedProducts;
+
+    /**
+     * @var Collection<int, Wishlist>
+     */
+    #[ORM\ManyToMany(targetEntity: Wishlist::class, mappedBy: 'products')]
+    private Collection $wishlists;
+
+    /**
+     * @var Collection<int, Review>
+     */
+    #[ORM\OneToMany(mappedBy: 'product', targetEntity: Review::class, cascade: ['remove'], orphanRemoval: true)]
+    private Collection $reviews;
+
+    /** @var Collection<int, ProductLot> */
+    #[ORM\OneToMany(targetEntity: ProductLot::class, mappedBy: 'product', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['receivedAt' => 'DESC'])]
+    private Collection $lots;
+
+    public function __construct()
+    {
+        $this->categories = new ArrayCollection();
+        $this->medias = new ArrayCollection();
+        $this->wishlists = new ArrayCollection();
+        $this->relatedProducts = new ArrayCollection();
+        $this->reviews = new ArrayCollection();
+        $this->wholesaleTiers = new ArrayCollection();
+        $this->lots = new ArrayCollection();
+    }
+
+    /** @return Collection<int, ProductLot> */
+    public function getLots(): Collection { return $this->lots; }
+
+    public function getCurrentLot(): ?ProductLot
+    {
+        foreach ($this->lots as $lot) {
+            if ($lot->isCurrent()) return $lot;
+        }
+        return null;
+    }
+
+    // ---------------------------------------------------------------------
+    // Validation métier (cohérence promo/prix)
+    // ---------------------------------------------------------------------
+
+    public function validatePricing(ExecutionContextInterface $context): void
+    {
+        // regular_price obligatoire (déjà couvert), mais on évite toute division par 0/valeurs incohérentes
+        if ($this->regular_price === null) {
+            return;
+        }
+
+        // Si prix soldé renseigné : doit être < regular_price
+        if ($this->solde_price !== null) {
+            if ($this->solde_price <= 0) {
+                $context->buildViolation('Le prix soldé doit être strictement positif.')
+                    ->atPath('solde_price')
+                    ->addViolation();
+                return;
+            }
+
+            if ($this->solde_price >= $this->regular_price) {
+                $context->buildViolation('Le prix soldé doit être inférieur au prix régulier.')
+                    ->atPath('solde_price')
+                    ->addViolation();
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // Getters / Setters (state access)
+    // ---------------------------------------------------------------------
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getTitle(): ?string
+    {
+        return $this->title;
+    }
+
+    public function setTitle(string $title): static
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(string $slug): static
+    {
+        $this->slug = $slug;
+
+        return $this;
+    }
+
+    public function getAccroche(): ?string
+    {
+        return $this->accroche;
+    }
+
+    public function setAccroche(?string $accroche): static
+    {
+        $this->accroche = $accroche;
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(string $description): static
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    public function getMoreDescription(): ?string
+    {
+        return $this->more_description;
+    }
+
+    public function setMoreDescription(?string $more_description): static
+    {
+        $this->more_description = $more_description;
+
+        return $this;
+    }
+
+    public function getAdditionalInfos(): ?string
+    {
+        return $this->additional_infos;
+    }
+
+    public function setAdditionalInfos(?string $additional_infos): static
+    {
+        $this->additional_infos = $additional_infos;
+
+        return $this;
+    }
+
+    public function getOriginCountry(): ?string
+    {
+        return $this->originCountry;
+    }
+    public function setOriginCountry(?string $v): self
+    {
+        $this->originCountry = $v;
+        return $this;
+    }
+
+    public function getTastingProfile(): ?string
+    {
+        return $this->tastingProfile;
+    }
+    public function setTastingProfile(?string $v): self
+    {
+        $this->tastingProfile = $v;
+        return $this;
+    }
+
+    public function getTastingIntensity(): ?int { return $this->tastingIntensity; }
+    public function setTastingIntensity(?int $v): static { $this->tastingIntensity = $v; return $this; }
+
+    public function getTastingAromatic(): ?int { return $this->tastingAromatic; }
+    public function setTastingAromatic(?int $v): static { $this->tastingAromatic = $v; return $this; }
+
+    public function getTastingSweetness(): ?int { return $this->tastingSweetness; }
+    public function setTastingSweetness(?int $v): static { $this->tastingSweetness = $v; return $this; }
+
+    public function getTastingFluidity(): ?int { return $this->tastingFluidity; }
+    public function setTastingFluidity(?int $v): static { $this->tastingFluidity = $v; return $this; }
+
+    public function getTastingTags(): ?string { return $this->tastingTags; }
+    public function setTastingTags(?string $v): static { $this->tastingTags = $v; return $this; }
+
+    public function getTextureLabel(): ?string { return $this->textureLabel; }
+    public function setTextureLabel(?string $v): static { $this->textureLabel = $v; return $this; }
+
+    public function getColorLabel(): ?string { return $this->colorLabel; }
+    public function setColorLabel(?string $v): static { $this->colorLabel = $v; return $this; }
+
+    public function getAromaticNotes(): ?string { return $this->aromaticNotes; }
+    public function setAromaticNotes(?string $v): static { $this->aromaticNotes = $v; return $this; }
+
+    public function getTastingSuggestion(): ?string { return $this->tastingSuggestion; }
+    public function setTastingSuggestion(?string $v): static { $this->tastingSuggestion = $v; return $this; }
+
+    /**
+     * Convertit tastingIntensity (0-100) en label textuel pour affichage tabulaire
+     * (comparateur, fiches synthèse). Renvoie null si le score n'est pas renseigné.
+     */
+    public function getTastingIntensityLabel(): ?string
+    {
+        if ($this->tastingIntensity === null) return null;
+        return match (true) {
+            $this->tastingIntensity <= 30 => 'Douce',
+            $this->tastingIntensity <= 50 => 'Douce à moyenne',
+            $this->tastingIntensity <= 70 => 'Moyenne',
+            $this->tastingIntensity <= 85 => 'Moyenne à corsée',
+            default                        => 'Corsée',
+        };
+    }
+
+    public function isHasLabAnalysis(): ?bool { return $this->hasLabAnalysis; }
+    public function setHasLabAnalysis(?bool $v): static { $this->hasLabAnalysis = $v; return $this; }
+
+    public function getLabAnalysis(): ?string { return $this->labAnalysis; }
+    public function setLabAnalysis(?string $v): static { $this->labAnalysis = $v; return $this; }
+    public function getLabAnalysisDecoded(): ?array
+    {
+        if ($this->labAnalysis === null || $this->labAnalysis === '') return null;
+        return json_decode($this->labAnalysis, true) ?: null;
+    }
+
+    public function getStock(): ?int
+    {
+        return $this->stock;
+    }
+
+    public function setStock(?int $stock): static
+    {
+        $this->stock = $stock;
+
+        return $this;
+    }
+
+    public function getWeightGrams(): ?int
+    {
+        return $this->weightGrams;
+    }
+
+    public function setWeightGrams(?int $weightGrams): self
+    {
+        $this->weightGrams = $weightGrams;
+        return $this;
+    }
+
+    public function getSoldePrice(): ?int
+    {
+        return $this->solde_price;
+    }
+
+    public function setSoldePrice(?int $solde_price): static
+    {
+        $this->solde_price = $solde_price;
+
+        return $this;
+    }
+
+    public function getRegularPrice(): ?int
+    {
+        return $this->regular_price;
+    }
+
+    public function setRegularPrice(int $regular_price): static
+    {
+        $this->regular_price = $regular_price;
+
+        return $this;
+    }
+
+    public function isAvailable(): ?bool
+    {
+        return $this->isAvailable;
+    }
+
+    public function setIsAvailable(?bool $isAvailable): static
+    {
+        $this->isAvailable = $isAvailable;
+
+        return $this;
+    }
+
+    public function isBestSeller(): ?bool
+    {
+        return $this->isBestSeller;
+    }
+
+    public function setIsBestSeller(?bool $isBestSeller): static
+    {
+        $this->isBestSeller = $isBestSeller;
+
+        return $this;
+    }
+
+    public function isNewArrival(): ?bool
+    {
+        return $this->isNewArrival;
+    }
+
+    public function setIsNewArrival(?bool $isNewArrival): static
+    {
+        $this->isNewArrival = $isNewArrival;
+
+        return $this;
+    }
+
+    public function isFeatured(): ?bool
+    {
+        return $this->isFeatured;
+    }
+
+    public function setIsFeatured(?bool $isFeatured): static
+    {
+        $this->isFeatured = $isFeatured;
+
+        return $this;
+    }
+
+    public function isSpecialOffer(): ?bool
+    {
+        return $this->isSpecialOffer;
+    }
+
+    public function setIsSpecialOffer(?bool $isSpecialOffer): static
+    {
+        $this->isSpecialOffer = $isSpecialOffer;
+
+        return $this;
+    }
+
+    public function getQualityHoldLabel(): ?string { return $this->qualityHoldLabel; }
+    public function setQualityHoldLabel(?string $v): static
+    {
+        $this->qualityHoldLabel = ($v !== null && trim($v) !== '') ? trim($v) : null;
+        return $this;
+    }
+
+    public function getQualityHoldReason(): ?string { return $this->qualityHoldReason; }
+    public function setQualityHoldReason(?string $v): static
+    {
+        $this->qualityHoldReason = ($v !== null && trim($v) !== '') ? $v : null;
+        return $this;
+    }
+
+    /**
+     * True dès qu'un motif détaillé est renseigné. Le label court est facultatif :
+     * si vide, l'UI affiche un texte générique ("Miel indisponible").
+     */
+    public function isOnQualityHold(): bool
+    {
+        return $this->qualityHoldReason !== null && trim($this->qualityHoldReason) !== '';
+    }
+
+    // ---------------------------------------------------------------------
+    // Relations helpers (collections)
+    // ---------------------------------------------------------------------
+
+    /**
+     * @return Collection<int, Category>
+     */
+    public function getCategories(): Collection
+    {
+        return $this->categories;
+    }
+
+    public function addCategory(Category $category): static
+    {
+        if (!$this->categories->contains($category)) {
+            $this->categories->add($category);
+        }
+
+        return $this;
+    }
+
+    public function removeCategory(Category $category): static
+    {
+        $this->categories->removeElement($category);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Media>
+     */
+    public function getMedias(): Collection
+    {
+        return $this->medias;
+    }
+
+    public function addMedia(Media $media): static
+    {
+        if (!$this->medias->contains($media)) {
+            $this->medias->add($media);
+            $media->setProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMedia(Media $media): static
+    {
+        if ($this->medias->removeElement($media)) {
+            if ($media->getProduct() === $this) {
+                $media->setProduct(null);
+            }
+        }
+
+        return $this;
+    }
+
+    // ---------------------------------------------------------------------
+    // Domain helpers (display / pricing business rules)
+    // ---------------------------------------------------------------------
+
+    /**
+     * True si le produit a un prix soldé valide (ex: soldePrice non null, > 0 et < regularPrice).
+     * Permet d’éviter d’afficher une promo quand il n’y en a pas.
+     */
+    public function isOnSale(): bool
+    {
+        return $this->solde_price !== null
+            && $this->solde_price > 0
+            && $this->regular_price !== null
+            && $this->solde_price < $this->regular_price;
+    }
+
+    /**
+     * Prix effectif à afficher (en centimes) : soldé si en promotion, sinon prix régulier.
+     * Retourne null si aucun prix n'est renseigné (produit incomplet).
+     */
+    public function getEffectivePrice(): ?int
+    {
+        return $this->isOnSale() ? $this->solde_price : $this->regular_price;
+    }
+
+    /**
+     * Pourcentage de remise (entier) si le produit est soldé, sinon null.
+     * Exemple : 1990 -> 1490 = 25 (%), arrondi au plus proche.
+     */
+    public function getDiscountPercentage(): ?int
+    {
+        if (!$this->isOnSale()) {
+            return null;
+        }
+
+        return (int) round(
+            (($this->regular_price - $this->solde_price) * 100) / $this->regular_price
+        );
+    }
+
+    public function isInStock(): bool
+    {
+        return $this->stock > 0;
+    }
+
+    /**
+     * Liste des noms de fichiers d'images (utile Twig / front). Exclut les vidéos.
+     */
+    public function getMediaFilenames(): array
+    {
+        $filenames = [];
+
+        foreach ($this->getMedias() as $media) {
+            if (!$media->isImage()) {
+                continue;
+            }
+            $name = $media->getFilename();
+            if (\is_string($name) && $name !== '') {
+                $filenames[] = $name;
+            }
+        }
+
+        return $filenames;
+    }
+
+    /**
+     * Retourne le fichier de cover. Une vidéo n'est jamais utilisée comme cover :
+     * on préfère toujours une image (marquée cover ou, à défaut, la première dispo).
+     */
+    public function getCoverFilename(): ?string
+    {
+        // 1) on privilégie une image marquée cover
+        foreach ($this->getMedias() as $media) {
+            if (!$media->isImage() || $media->isCover() !== true) {
+                continue;
+            }
+            $name = $media->getFilename();
+            if (\is_string($name) && $name !== '') {
+                return $name;
+            }
+        }
+
+        // 2) fallback : première image valide
+        foreach ($this->getMediaFilenames() as $name) {
+            return $name;
+        }
+
+        return null;
+    }
+
+    /**
+     * Données médias exposées côté front (cards, galeries). Renvoie images ET vidéos.
+     * Chaque item porte son type ('image'|'video'), sa source (filename ou embedUrl)
+     * et son URL publique.
+     */
+    public function getMediaData(): array
+    {
+        $data = [];
+
+        foreach ($this->getMedias() as $media) {
+            $filename = $media->getFilename();
+            $hasFile  = \is_string($filename) && $filename !== '';
+            $embed    = $media->isVideo() ? $media->getVideoEmbedUrl() : null;
+
+            if (!$hasFile && $embed === null) {
+                continue;
+            }
+
+            $alt = $media->getAlt();
+            $data[] = [
+                'type'        => $media->getType(),
+                'filename'    => $hasFile ? $filename : null,
+                'videoUrl'    => $media->isVideo() ? $media->getVideoUrl() : null,
+                'embedUrl'    => $embed,
+                'alt'         => (\is_string($alt) && $alt !== '') ? $alt : null,
+                'isWholesale' => $media->isWholesale() ?? false,
+            ];
+        }
+
+        return $data;
+    }
+
+    
+
+    // ---------------------------------------------------------------------
+    // Wholesale
+    // ---------------------------------------------------------------------
+
+    public function isWholesaleAvailable(): ?bool { return $this->isWholesaleAvailable; }
+    public function setIsWholesaleAvailable(?bool $v): static { $this->isWholesaleAvailable = $v; return $this; }
+
+    public function getWholesaleDescription(): ?string { return $this->wholesaleDescription; }
+    public function setWholesaleDescription(?string $v): static { $this->wholesaleDescription = $v; return $this; }
+
+    public function getWholesaleMinQtyKg(): ?int { return $this->wholesaleMinQtyKg; }
+    public function setWholesaleMinQtyKg(?int $v): static { $this->wholesaleMinQtyKg = $v; return $this; }
+
+    public function getWholesaleFormats(): ?string { return $this->wholesaleFormats; }
+    public function setWholesaleFormats(?string $v): static { $this->wholesaleFormats = $v; return $this; }
+
+    /** @return Collection<int, WholesaleTier> */
+    public function getWholesaleTiers(): Collection { return $this->wholesaleTiers; }
+
+    public function addWholesaleTier(WholesaleTier $tier): static
+    {
+        if (!$this->wholesaleTiers->contains($tier)) {
+            $this->wholesaleTiers->add($tier);
+            $tier->setProduct($this);
+        }
+        return $this;
+    }
+
+    public function removeWholesaleTier(WholesaleTier $tier): static
+    {
+        if ($this->wholesaleTiers->removeElement($tier)) {
+            if ($tier->getProduct() === $this) {
+                $tier->setProduct(null);
+            }
+        }
+        return $this;
+    }
+
+    // ---------------------------------------------------------------------
+    // Misc
+    // ---------------------------------------------------------------------
+
+    public function __toString(): string
+    {
+        return (string) $this->title;
+    }
+
+    /** @return Collection<int, Review> */
+    public function getReviews(): Collection
+    {
+        return $this->reviews;
+    }
+
+    public function getAverageRating(): ?float
+    {
+        $approved = $this->reviews->filter(
+            fn(Review $r) => $r->getStatus() === \App\Enum\ReviewStatus::Approved
+        );
+
+        if ($approved->isEmpty()) {
+            return null;
+        }
+
+        $sum = array_sum($approved->map(fn(Review $r) => $r->getRating())->toArray());
+
+        return round($sum / $approved->count(), 1);
+    }
+
+    public function getApprovedReviewsCount(): int
+    {
+        return $this->reviews->filter(
+            fn(Review $r) => $r->getStatus() === \App\Enum\ReviewStatus::Approved
+        )->count();
+    }
+
+    /** @return Collection<int, self> */
+    public function getRelatedProducts(): Collection
+    {
+        return $this->relatedProducts;
+    }
+
+    public function addRelatedProduct(self $product): self
+    {
+        if ($product === $this) {
+            return $this; // évite qu’un produit se référence lui-même
+        }
+
+        if (!$this->relatedProducts->contains($product)) {
+            $this->relatedProducts->add($product);
+        }
+
+        return $this;
+    }
+
+    public function removeRelatedProduct(self $product): self
+    {
+        $this->relatedProducts->removeElement($product);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Wishlist>
+     */
+    public function getWishlists(): Collection
+    {
+        return $this->wishlists;
+    }
+
+    public function addWishlist(Wishlist $wishlist): static
+    {
+        if (!$this->wishlists->contains($wishlist)) {
+            $this->wishlists->add($wishlist);
+            // Optionnel : si tu veux garder la synchro bidirectionnelle
+            if (!$wishlist->getProducts()->contains($this)) {
+                $wishlist->addProduct($this);
+            }
+        }
+
+        return $this;
+    }
+
+    public function removeWishlist(Wishlist $wishlist): static
+    {
+        if ($this->wishlists->removeElement($wishlist)) {
+            $wishlist->removeProduct($this);
+        }
+
+        return $this;
+    }
+
+}

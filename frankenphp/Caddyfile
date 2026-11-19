@@ -1,0 +1,89 @@
+{
+	skip_install_trust
+
+	{$CADDY_GLOBAL_OPTIONS}
+
+	frankenphp {
+		{$FRANKENPHP_CONFIG}
+
+		worker {
+			file ./public/index.php
+			{$FRANKENPHP_WORKER_CONFIG}
+		}
+	}
+}
+
+{$CADDY_EXTRA_CONFIG}
+
+{$SERVER_NAME:localhost} {
+	log {
+		{$CADDY_SERVER_LOG_OPTIONS}
+		# Redact the authorization query parameter that can be set by Mercure
+		format filter {
+			request>uri query {
+				replace authorization REDACTED
+			}
+		}
+	}
+
+	root /app/public
+	encode zstd br gzip
+
+	# Redirection permanente www → domaine canonique (ex. www.nidemiel.com → nidemiel.com).
+	# Inactive si CANONICAL_HOST est vide (dev) : le matcher devient `host www.` et ne matche rien.
+	# Le reverse proxy externe doit aussi router www.<domaine> vers ce conteneur.
+	@wwwHost host www.{$CANONICAL_HOST}
+	redir @wwwHost https://{$CANONICAL_HOST}{uri} 308
+
+	vulcain
+
+	{$CADDY_SERVER_EXTRA_DIRECTIVES}
+
+	# Headers de sécurité HTTP
+	header ?X-Content-Type-Options "nosniff"
+	header ?X-Frame-Options "SAMEORIGIN"
+	header ?Referrer-Policy "strict-origin-when-cross-origin"
+	header ?X-XSS-Protection "1; mode=block"
+	# HSTS : forcer HTTPS pour 1 an (activer uniquement en prod avec HTTPS valide)
+	header ?Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	# CSP désactivé en dev — à configurer sur le serveur de production
+	# après audit des domaines tiers (Stripe, Colissimo/HERE Maps, Mapbox, Google, etc.)
+	# header ?Content-Security-Policy "..."
+	# X-Robots-Tag : piloté côté Symfony via IndexabilityPolicyResponseListener
+	# (source unique = env SITE_INDEXABLE). Voir src/EventListener/IndexabilityPolicyResponseListener.php.
+
+	# Cache long durée pour les assets statiques (CSS, JS, fonts, images)
+	@staticAssets {
+		path /assets/css/* /assets/js/* /assets/fonts/* /assets/images/* /assets/videos/* /assets/bootstrap/* /favicon/*
+		file
+	}
+	header @staticAssets Cache-Control "public, max-age=31536000, immutable"
+
+	# Headers de performance pour les images
+	@images {
+		path /assets/images/*
+		file
+	}
+	header @images Vary "Accept"
+
+	# Forcer le type MIME WebP pour les fichiers .webp
+	@webp {
+		path *.webp
+		file
+	}
+	header @webp Content-Type "image/webp"
+
+	@phpRoute {
+		not path /.well-known/mercure*
+		not file {path}
+	}
+	rewrite @phpRoute index.php
+
+	@frontController path index.php
+	php @frontController
+
+	file_server {
+		hide *.php
+	}
+
+}

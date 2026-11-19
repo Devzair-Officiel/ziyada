@@ -1,0 +1,183 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Suivi colis — Commande #{{ order.id }} | {{ globalSetting.website_name }}{% endblock %}
+
+{% block body %}
+
+{% include 'page_head/index.html.twig' with {
+	page_name: 'Suivi de colis',
+	breadcrumbs: [
+		{ label: 'Mon compte', url: path('app_account') },
+		{ label: 'Commande #' ~ order.id, url: path('app_account_order_detail', { id: order.id }) },
+		{ label: 'Suivi colis' }
+	]
+} %}
+
+{#
+	Mapping codes Colissimo → étapes de la barre de progression
+	Étapes : pris en charge → en transit → en livraison → livré
+#}
+{% set deliveredCodes = ['LIVCFM', 'LIVGAR', 'LIVDOM'] %}
+{% set outForDelCodes = ['DISTRI', 'OUTDELIV'] %}
+{% set inTransitCodes = ['ENCOURS', 'INTRANS', 'TRANSIT', 'SORTIS', 'TRIEN'] %}
+{% set pickedUpCodes  = ['PCHCFM', 'PRISE_EN_CHARGE', 'PRISE'] %}
+{% set exceptionCodes = ['RETOUR', 'RETN', 'ANOMAL', 'DIFFTRT'] %}
+
+{% set currentCode = shipment.statusCode ?? '' %}
+{% set isDelivered = currentCode in deliveredCodes %}
+{% set isOutForDel = currentCode in outForDelCodes %}
+{% set isInTransit = currentCode in inTransitCodes %}
+{% set isPickedUp  = currentCode in pickedUpCodes %}
+{% set isException = currentCode in exceptionCodes %}
+
+{% set progressLevel = 0 %}
+{% if isPickedUp  %}{% set progressLevel = 1 %}{% endif %}
+{% if isInTransit %}{% set progressLevel = 2 %}{% endif %}
+{% if isOutForDel %}{% set progressLevel = 3 %}{% endif %}
+{% if isDelivered %}{% set progressLevel = 4 %}{% endif %}
+{% if shipment.shippedAt and progressLevel == 0 %}{% set progressLevel = 1 %}{% endif %}
+
+<main id="main-content">
+	<section class="nide-account">
+		<div class="container">
+			<div style="max-width: 720px; margin: 0 auto;">
+
+				{# En-tête expédition #}
+				<div class="nide-account__panel">
+					<div class="nide-account__tracking-meta">
+						<div>
+							<div class="nide-account__tracking-label">Transporteur</div>
+							<div class="fw-semibold">{{ shipment.carrier ? shipment.carrier.name : 'Colissimo' }}</div>
+						</div>
+						<div>
+							<div class="nide-account__tracking-label">N° de suivi</div>
+							<div class="fw-semibold" style="font-family:monospace">{{ shipment.trackingNumber }}</div>
+						</div>
+						{% if shipment.shippedAt %}
+						<div>
+							<div class="nide-account__tracking-label">Expédié le</div>
+							<div class="fw-semibold">{{ shipment.shippedAt|date('d/m/Y', 'Europe/Paris') }}</div>
+						</div>
+						{% endif %}
+						{% if shipment.deliveredAt %}
+						<div>
+							<div class="nide-account__tracking-label">Livré le</div>
+							<div class="fw-semibold" style="color:#2a7a3a">{{ shipment.deliveredAt|date('d/m/Y', 'Europe/Paris') }}</div>
+						</div>
+						{% endif %}
+					</div>
+					{% if shipment.trackingUrl %}
+					<div class="mt-3">
+						<a href="{{ shipment.trackingUrl }}" target="_blank" rel="noopener" class="btn btn-fill-line btn-sm">
+							Voir sur laposte.fr <svg class="icon ms-1" aria-hidden="true"><use href="#icon-external-link"></use></svg>
+						</a>
+					</div>
+					{% endif %}
+				</div>
+
+				{# Point relais #}
+				{% set pp = order.pickupPoint %}
+				{% if pp %}
+				<div class="nide-account__panel nide-account__pickup-card" style="margin-top:1.25rem">
+					<svg class="icon me-2" aria-hidden="true"><use href="#icon-location"></use></svg>
+					<div>
+						<div class="fw-semibold">{{ pp.name }}</div>
+						<div class="nide-account__table-date">{{ pp.address }}, {{ pp.postalCode }} {{ pp.city }}</div>
+					</div>
+				</div>
+				{% endif %}
+
+				{# Barre de progression #}
+				{% if not isException %}
+				<div class="nide-account__panel" style="margin-top:1.25rem">
+					<div class="nide-tracking-progress">
+
+						<div class="nide-tracking-step {% if progressLevel >= 2 %}is-done{% elseif progressLevel == 1 %}is-current{% endif %}">
+							<div class="nide-tracking-step__icon"><svg class="icon" aria-hidden="true"><use href="#icon-package"></use></svg></div>
+							<div class="nide-tracking-step__label">Pris en charge</div>
+						</div>
+
+						<div class="nide-tracking-step {% if progressLevel >= 3 %}is-done{% elseif progressLevel == 2 %}is-current{% endif %}">
+							<div class="nide-tracking-step__icon"><svg class="icon" aria-hidden="true"><use href="#icon-truck"></use></svg></div>
+							<div class="nide-tracking-step__label">En transit</div>
+						</div>
+
+						<div class="nide-tracking-step {% if progressLevel >= 4 %}is-done{% elseif progressLevel == 3 %}is-current{% endif %}">
+							<div class="nide-tracking-step__icon"><svg class="icon" aria-hidden="true"><use href="#icon-truck"></use></svg></div>
+							<div class="nide-tracking-step__label">En livraison</div>
+						</div>
+
+						<div class="nide-tracking-step {% if progressLevel >= 4 %}is-delivered{% endif %}">
+							<div class="nide-tracking-step__icon"><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></div>
+							<div class="nide-tracking-step__label">Livré</div>
+						</div>
+
+					</div>
+				</div>
+				{% else %}
+				<div class="alert alert-warning mt-3">
+					<svg class="icon me-2" aria-hidden="true"><use href="#icon-warning"></use></svg>
+					Une exception a été détectée sur ce colis. Consultez le détail ci-dessous ou contactez le transporteur.
+				</div>
+				{% endif %}
+
+				{# Timeline événements #}
+				<div class="nide-account__panel" style="margin-top:1.25rem">
+					<h3 class="nide-account__panel-title">Historique des événements</h3>
+
+					{% if statuses|length == 0 %}
+						<p class="nide-account__empty">
+							Aucun événement disponible pour l'instant.<br>
+							<small>Les informations sont mises à jour toutes les heures.</small>
+						</p>
+					{% else %}
+					<div class="nide-tracking-timeline">
+						{% for status in statuses %}
+							{% set isFirst = loop.first %}
+							{% set code    = status.statusCode %}
+							{% set isDel   = code in deliveredCodes %}
+							{% set isExc   = code in exceptionCodes %}
+
+							<div class="nide-tracking-event
+								{% if isFirst and not isDel and not isExc %}is-active{% endif %}
+								{% if isDel %}is-delivered{% endif %}
+								{% if isExc %}is-exception{% endif %}">
+
+								<div class="nide-tracking-event__dot">
+									{% if isDel %}
+										<svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg>
+									{% elseif isExc %}
+										<svg class="icon" aria-hidden="true"><use href="#icon-alert-circle"></use></svg>
+									{% endif %}
+								</div>
+
+								<div class="nide-tracking-event__label">{{ status.label }}</div>
+
+								{% if status.occuredAt %}
+								<div class="nide-tracking-event__date">{{ status.occuredAt|date('d/m/Y à H:i', 'Europe/Paris') }}</div>
+								{% endif %}
+
+								{% if status.rawData.site is defined and status.rawData.site %}
+								<div class="nide-tracking-event__site">
+									<svg class="icon me-1" aria-hidden="true"><use href="#icon-location"></use></svg>{{ status.rawData.site }}
+								</div>
+								{% endif %}
+							</div>
+						{% endfor %}
+					</div>
+					{% endif %}
+				</div>
+
+				<div class="mt-3">
+					<a href="{{ path('app_account_order_detail', { id: order.id }) }}#orders" class="nide-trust__link">
+						<svg viewBox="0 0 20 20" fill="none" aria-hidden="true" style="transform:rotate(180deg)"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						Retour à la commande
+					</a>
+				</div>
+
+			</div>
+		</div>
+	</section>
+</main>
+
+{% endblock %}

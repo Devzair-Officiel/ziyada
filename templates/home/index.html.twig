@@ -1,0 +1,397 @@
+{% extends 'base.html.twig' %}
+
+{% block title %} {{ globalSetting.website_name }} | Sélection de miels aux origines identifiées {% endblock %}
+
+{% block stylesheets %}
+	{% set heroVideo = globalSetting.hero_video_filename ?? null %}
+	{% set heroPoster = globalSetting.hero_poster_filename ?? null %}
+	{% if heroVideo %}
+		{% if heroPoster %}
+			{# Poster = LCP réel, préchargement prioritaire #}
+			<link rel="preload" as="image" href="/assets/images/hero/{{ heroPoster }}" fetchpriority="high">
+		{% else %}
+			{# Sans poster, précharger la vidéo #}
+			<link rel="preload" as="video" href="/assets/videos/hero/{{ heroVideo }}" type="video/mp4">
+		{% endif %}
+	{% elseif sliders|length > 0 %}
+		{# Préchargement LCP — WebP prioritaire, fallback PNG #}
+		{% set _lcpSlug = sliders[0].mediaSlider|split('.')|slice(0, -1)|join('.') %}
+		{% set _lcpWebp = '/assets/images/sliders/' ~ _lcpSlug ~ '-large.webp' %}
+		{% set _lcpPng  = '/assets/images/sliders/' ~ sliders[0].mediaSlider %}
+		<link rel="preload" as="image"
+			href="{{ _lcpWebp }}"
+			imagesrcset="{{ _lcpWebp }} 1440w, {{ _lcpPng }} 1440w"
+			imagesizes="100vw"
+			type="image/webp"
+			fetchpriority="high">
+	{% endif %}
+{% endblock %}
+
+{% block body %}
+
+	<main id="main-content">
+		{% set heroVideo = globalSetting.hero_video_filename ?? null %}
+		<section class="banner_section slide_medium shop_banner_slider staggered-animation-wrap" aria-label="Mise en avant des produits">
+
+		{% if heroVideo %}
+			{% set heroPoster = globalSetting.hero_poster_filename ?? null %}
+			<div class="slider-video-item">
+				<video class="slider-video-bg" autoplay muted loop playsinline preload="auto" fetchpriority="high" aria-hidden="true"
+					{% if heroPoster %}poster="/assets/images/hero/{{ heroPoster }}"{% endif %}>
+					<source src="/assets/videos/hero/{{ heroVideo }}" type="video/mp4">
+				</video>
+				<div class="banner_slide_content">
+					<div class="container">
+						<div class="row">
+							<div class="col-lg-7 col-9">
+								<div class="banner_content overflow-hidden">
+									<h1 class="staggered-animation animated slideInLeft" style="color:#fff;">
+										{{ globalSetting.heroTitle ?: 'Acheter du miel naturel en ligne' }}
+									</h1>
+									{% set btnUrl  = globalSetting.heroButtonUrl  ?: '/boutique' %}
+									{% set btnText = globalSetting.heroButtonText ?: 'Découvrir' %}
+									<a class="mt-4 btn btn-fill-out rounded-0 text-uppercase" href="{{ btnUrl }}">
+										{{ btnText }}
+									</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		{% else %}
+			<div id="carouselExampleControls" data-bs-ride="carousel" class="carousel slide carousel-fade light_arrow">
+				<div class="carousel-inner">
+					{% for slider in sliders %}
+						{# Chemins — original (toujours présent) + webp large (si généré) #}
+						{% set _orig    = slider.mediaSlider|split('.')|slice(0, -1)|join('.') %}
+						{% set imgDesktopOriginal = '/assets/images/sliders/' ~ slider.mediaSlider %}
+						{% set imgDesktopWebp     = '/assets/images/sliders/' ~ _orig ~ '-large.webp' %}
+						{% set _origM             = slider.mediaSliderMobile ? slider.mediaSliderMobile|split('.')|slice(0, -1)|join('.') : null %}
+						{% set imgMobileOriginal  = slider.mediaSliderMobile ? '/assets/images/sliders/' ~ slider.mediaSliderMobile : imgDesktopOriginal %}
+						{% set imgMobileWebp      = _origM ? '/assets/images/sliders/' ~ _origM ~ '-large.webp' : imgDesktopWebp %}
+						{# Alias utilisés par le JS lazy-loader (fond CSS des slides 2+) : variante WebP 1400px #}
+						{% set imgDesktop = imgDesktopWebp %}
+						{% set imgMobile  = imgMobileWebp %}
+						<div class="{{ loop.first ? 'carousel-item background_bg active' : 'lazyload carousel-item background_bg' }}"
+							{% if not loop.first %}
+								data-img-src="{{ imgDesktop }}"
+								data-img-mobile="{{ imgMobile }}"
+								data-img-webp="{{ imgDesktopWebp }}"
+								data-img-mobile-webp="{{ imgMobileWebp }}"
+							{% endif %}
+							aria-label="{{ slider.title ? slider.title : (slider.description ? slider.description|striptags : 'Slide ' ~ loop.index) }}"
+							role="img">
+							{% if loop.first %}
+								{# <picture> : WebP si disponible, PNG/JPG original en fallback #}
+								<picture>
+									<source media="(max-width: 767px)" srcset="{{ imgMobileWebp }}" type="image/webp">
+									<source srcset="{{ imgDesktopWebp }}" type="image/webp">
+									<img src="{{ imgDesktopOriginal }}"
+										srcset="{{ imgMobileOriginal }} 767w, {{ imgDesktopOriginal }} 1440w"
+										sizes="100vw"
+										alt="{{ slider.title ?? '' }}"
+										class="slide-lcp-img"
+										fetchpriority="high"
+										loading="eager"
+										decoding="sync"
+										width="1440" height="680">
+								</picture>
+							{% endif %}
+							<div class="banner_slide_content">
+								<div class="container">
+									<div class="row">
+										<div class="col-lg-7 col-9">
+											<div class="banner_content overflow-hidden">
+
+												{% if slider.title %}
+													<p data-animation="slideInLeft" data-animation-delay="0.5s" class=" staggered-animation font-weight-light animated slideInLeft" style="animation-delay: 0.5s; opacity: 1;">
+														{{ slider.description|striptags }}
+													</p>
+												{% endif %}
+
+												{% if loop.first %}
+													<h1 data-animation="slideInLeft" data-animation-delay="1s" class="staggered-animation animated slideInLeft" style="color: #fff; animation-delay: 1s; opacity: 1;">
+														Une sélection de miels aux origines identifiées
+													</h1>
+												{% else %}
+													{% if slider.description %}
+														<p data-animation="slideInLeft" data-animation-delay="1s" class="h2 mb-3 staggered-animation animated slideInLeft banner_main_text" style="color: aliceblue; animation-delay: 1s; opacity: 1;">
+															{{ slider.description|striptags }}
+														</p>
+													{% endif %}
+												{% endif %}
+
+												{% if slider.buttonLink and slider.buttonText %}
+												<a data-animation="slideInLeft" data-animation-delay="1.5s" class="mt-4 btn btn-fill-out rounded-0 staggered-animation text-uppercase animated slideInLeft" href="{{ slider.buttonLink }}" style="animation-delay: 1.5s; opacity: 1;">
+													{{ slider.buttonText }}
+												</a>
+												{% endif %}
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					{% endfor %}
+				</div>
+
+				<a href="#carouselExampleControls" role="button" data-bs-slide="prev" class="carousel-control-prev" aria-label="Slide précédent">
+					<svg class="icon" aria-hidden="true"><use href="#icon-chevron-left"></use></svg>
+				</a>
+
+				<a href="#carouselExampleControls" role="button" data-bs-slide="next" class="carousel-control-next" aria-label="Slide suivant">
+					<svg class="icon" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+				</a>
+			</div>
+		{% endif %}
+		</section>
+
+		<section class="nide-reassurance" aria-label="Nos engagements">
+			<div class="container">
+				<ul class="nide-reassurance__list" role="list">
+
+					<li class="nide-reassurance__item" style="--delay:.05s">
+						<span class="nide-reassurance__icon" aria-hidden="true">
+							<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<circle cx="24" cy="20" r="8" stroke="currentColor" stroke-width="1.8"/>
+								<path d="M24 28c0 0-10 6.5-10 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+								<path d="M24 28c0 0 10 6.5 10 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+								<circle cx="24" cy="20" r="2.5" fill="currentColor"/>
+							</svg>
+						</span>
+						<span class="nide-reassurance__label">Provenance</span>
+						<strong class="nide-reassurance__title">Origines identifiées</strong>
+						<span class="nide-reassurance__sep" aria-hidden="true"></span>
+						<p class="nide-reassurance__text">Région, apiculteur, conditions de récolte. Chaque miel est tracé jusqu'à sa source.</p>
+					</li>
+
+					<li class="nide-reassurance__item" style="--delay:.18s">
+						<span class="nide-reassurance__icon" aria-hidden="true">
+							<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<rect x="20" y="7" width="8" height="20" rx="4" stroke="currentColor" stroke-width="1.8"/>
+								<path d="M14 25a10 10 0 0 0 20 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+								<line x1="24" y1="35" x2="24" y2="41" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+								<line x1="17" y1="41" x2="31" y2="41" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+							</svg>
+						</span>
+						<span class="nide-reassurance__label">Transparence</span>
+						<strong class="nide-reassurance__title">Analyses disponibles</strong>
+						<span class="nide-reassurance__sep" aria-hidden="true"></span>
+						<p class="nide-reassurance__text">Les résultats de laboratoire sont accessibles sur chaque fiche produit.</p>
+					</li>
+
+					<li class="nide-reassurance__item" style="--delay:.31s">
+						<span class="nide-reassurance__icon" aria-hidden="true">
+							<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<polygon points="24,7 28.5,18 41,18 31,25.5 34.5,37 24,30 13.5,37 17,25.5 7,18 19.5,18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+							</svg>
+						</span>
+						<span class="nide-reassurance__label">Sélection</span>
+						<strong class="nide-reassurance__title">Sélection resserrée</strong>
+						<span class="nide-reassurance__sep" aria-hidden="true"></span>
+						<p class="nide-reassurance__text">Une dizaine de références. Un choix réfléchi, revu régulièrement.</p>
+					</li>
+
+				</ul>
+			</div>
+		</section>
+
+		<section class="main_content" aria-labelledby="home-products-title">
+			<div class="section small_pt pb_70">
+				<div class="container">
+
+					<div class="nide-selection-intro">
+						<span class="nide-selection-intro__kicker">La sélection</span>
+						<h2 id="home-products-title" class="nide-selection-intro__title">La sélection Nidemiel</h2>
+						<div class="nide-selection-intro__body">
+							<p>Nous ne cherchons pas à proposer tous les miels. Nous en sélectionnons quelques-uns, choisis pour leur origine, leur goût et les informations que nous sommes en mesure de fournir sur chacun d'eux.</p>
+							<p>Le catalogue reste volontairement resserré. Chaque miel a sa place pour une raison précise&nbsp;: son profil gustatif, sa provenance, son caractère, et ce qu'il permet réellement de comprendre avant l'achat.</p>
+						</div>
+						<p class="nide-selection-intro__guide">
+							Pas sûr par lequel commencer&nbsp;?
+							<a href="{{ path('app_guide_sensoriel') }}">Consultez notre guide sensoriel</a>
+							pour choisir selon vos goûts.
+						</p>
+					</div>
+
+					<div class="row">
+						<div class="col-12">
+							<div class="nide-tabs">
+								<ul role="tablist" class="nav nav-tabs nide-tabs__list" aria-label="Filtres produits">
+									<li class="nav-item" role="presentation">
+										<a id="all-tab" data-bs-toggle="tab" href="#all" role="tab" aria-controls="all" aria-selected="true" class="nav-link nide-tabs__link active">
+											Tous les miels
+										</a>
+									</li>
+									<li class="nav-item" role="presentation">
+										<a id="arrival-tab" data-bs-toggle="tab" href="#arrival" role="tab" aria-controls="arrival" aria-selected="false" class="nav-link nide-tabs__link">
+											Nouveautés
+										</a>
+									</li>
+									<li class="nav-item" role="presentation">
+										<a id="sellers-tab" data-bs-toggle="tab" href="#sellers" role="tab" aria-controls="sellers" aria-selected="false" class="nav-link nide-tabs__link">
+											Incontournables
+										</a>
+									</li>
+								</ul>
+							</div>
+
+							<div class="tab-content">
+								<div id="all" role="tabpanel" aria-labelledby="all-tab" class="tab-pane fade show active">
+									<div class="row shop_container">
+										{% for product in productAll %}
+											{% include 'product/display_product.html.twig' %}
+										{% else %}
+											<div class="col-12">
+												<p class="text-center">Aucun produit disponible pour le moment.</p>
+											</div>
+										{% endfor %}
+									</div>
+								</div>
+
+								<div id="arrival" role="tabpanel" aria-labelledby="arrival-tab" class="tab-pane fade">
+									<div class="row shop_container">
+										{% for product in productNewArrival %}
+											{% include 'product/display_product.html.twig' %}
+										{% else %}
+											<div class="col-12">
+												<p class="text-center">Aucune nouveauté disponible pour le moment.</p>
+											</div>
+										{% endfor %}
+									</div>
+								</div>
+
+								<div id="sellers" role="tabpanel" aria-labelledby="sellers-tab" class="tab-pane fade">
+									<div class="row shop_container">
+										{% for product in productBestSeller %}
+											{% include 'product/display_product.html.twig' %}
+										{% else %}
+											<div class="col-12">
+												<p class="text-center">Aucun produit incontournable disponible pour le moment.</p>
+											</div>
+										{% endfor %}
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section class="nide-trust" aria-labelledby="nide-trust-title">
+			<div class="container">
+				<div class="nide-trust__inner">
+					<div class="nide-trust__text-col">
+						<span class="nide-trust__kicker">Notre approche</span>
+						<h2 id="nide-trust-title" class="nide-trust__title">Pourquoi une sélection aussi resserrée&nbsp;?</h2>
+						<div class="nide-trust__body">
+							<p>Parce qu'un miel mérite plus qu'une simple origine affichée. Ce qui compte, c'est aussi la région, les conditions de récolte, le profil du miel et les éléments concrets qui permettent de mieux le situer.</p>
+							<p>Nidemiel est une boutique spécialisée. Nous préférons proposer peu de références, mais être en mesure d'expliquer pourquoi elles ont été choisies, ce qui les distingue, et sur quoi repose notre confiance.</p>
+						</div>
+						<a href="/a-propos" class="nide-trust__link">
+							En savoir plus sur notre approche
+							<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						</a>
+					</div>
+					<div class="nide-trust__deco-col" aria-hidden="true">
+						<div class="nide-trust__deco">
+							<svg class="nide-trust__hex" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M100 4L196 56v108L100 216 4 164V56L100 4Z" stroke="#c8a96e" stroke-width="1" opacity=".35"/>
+								<path d="M100 24L180 68v88l-80 44-80-44V68L100 24Z" stroke="#c8a96e" stroke-width="1" opacity=".25"/>
+								<path d="M100 44L164 80v72l-64 36-64-36V80L100 44Z" stroke="#c8a96e" stroke-width="1" opacity=".18"/>
+							</svg>
+							<div class="nide-trust__stat">
+								<span class="nide-trust__stat-num">{{ productAll|length }}</span>
+								<span class="nide-trust__stat-label">références<br>sélectionnées</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+	{% if faqs is not empty %}
+		<section class="nide-faq" aria-labelledby="faq-title">
+			<div class="container">
+				<div class="nide-faq__header">
+					<span class="nide-faq__kicker">FAQ</span>
+					<h2 id="faq-title" class="nide-faq__title">Questions fréquentes</h2>
+					<p class="nide-faq__subtitle">Ce que nos clients demandent le plus souvent.</p>
+				</div>
+				<div class="nide-faq__list" id="faqAccordion">
+					{% for faq in faqs|slice(0, 3) %}
+						<div class="nide-faq__item {% if loop.first %}is-open{% endif %}">
+							<button
+								class="nide-faq__question"
+								type="button"
+								data-bs-toggle="collapse"
+								data-bs-target="#faq-collapse-{{ faq.id }}"
+								aria-expanded="{{ loop.first ? 'true' : 'false' }}"
+								aria-controls="faq-collapse-{{ faq.id }}"
+								id="faq-heading-{{ faq.id }}"
+							>
+								<span>{{ faq.question }}</span>
+								<span class="nide-faq__icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+								</span>
+							</button>
+							<div
+								id="faq-collapse-{{ faq.id }}"
+								class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
+								aria-labelledby="faq-heading-{{ faq.id }}"
+								data-bs-parent="#faqAccordion"
+							>
+								<div class="nide-faq__answer">
+									{{ faq.answer|nl2br }}
+								</div>
+							</div>
+						</div>
+					{% endfor %}
+				</div>
+				{% if faqs|length > 3 %}
+					<div class="nide-faq__more">
+						<a href="{{ path('app_faq') }}" class="nide-trust__link">
+							Voir toutes les questions ({{ faqs|length }})
+							<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						</a>
+					</div>
+				{% endif %}
+			</div>
+		</section>
+	{% endif %}
+
+	</main>
+
+	<script>
+	(function () {
+		/* Trust block — animation au scroll */
+		var trustEls = document.querySelectorAll('.nide-trust__text-col, .nide-trust__deco-col');
+		if (trustEls.length) {
+			var io = new IntersectionObserver(function (entries) {
+				entries.forEach(function (e) {
+					if (e.isIntersecting) { e.target.classList.add('nide-visible'); io.unobserve(e.target); }
+				});
+			}, { threshold: 0.15 });
+			trustEls.forEach(function (el) { io.observe(el); });
+		}
+
+		/* Slider — swap image mobile sur slides lazy-loaded */
+		var isMobile = window.matchMedia('(max-width: 767px)');
+		document.querySelectorAll('.carousel-item.lazyload[data-img-src]').forEach(function (slide) {
+			var src = isMobile.matches && slide.dataset.imgMobile ? slide.dataset.imgMobile : slide.dataset.imgSrc;
+			slide.style.setProperty('--slide-bg-desktop', "url('" + slide.dataset.imgSrc + "')");
+			slide.style.setProperty('--slide-bg-mobile', "url('" + (slide.dataset.imgMobile || slide.dataset.imgSrc) + "')");
+			slide.style.backgroundImage = "url('" + src + "')";
+		});
+		isMobile.addEventListener('change', function (e) {
+			document.querySelectorAll('.carousel-item.background_bg').forEach(function (slide) {
+				var src = e.matches && slide.dataset.imgMobile ? slide.dataset.imgMobile : (slide.dataset.imgSrc || null);
+				if (src) slide.style.backgroundImage = "url('" + src + "')";
+			});
+		});
+	})();
+	</script>
+
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ globalSetting.website_name }} | Mes Favoris{% endblock %}
+
+{% block body %}
+	{% include "page_head/index.html.twig" with {'page_name': 'Mes Favoris'} %}
+
+	<div class="main_content wishlist_content" data-wishlist='{{ wishlist|json_encode|e("html_attr") }}'>
+		<div class="section">
+			<div class="container">
+				<div class="wishlist-grid row g-4">
+					{# Les cartes sont injectées par wishlist.js #}
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock %}
+

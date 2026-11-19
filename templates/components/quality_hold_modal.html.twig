@@ -1,0 +1,68 @@
+{# Modale partagée pour expliquer une mise en pause qualité.
+   À inclure UNE seule fois par page (idéalement dans base.html.twig via bloc). #}
+<div id="qualityHoldModal" class="quality-modal" role="dialog" aria-modal="true" aria-labelledby="qualityHoldModalTitle" hidden>
+    <div class="quality-modal__backdrop" data-quality-close></div>
+    <div class="quality-modal__panel" role="document">
+        <button type="button" class="quality-modal__close" data-quality-close aria-label="Fermer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="quality-modal__icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <h2 id="qualityHoldModalTitle" class="quality-modal__title">Miel actuellement indisponible</h2>
+        <p class="quality-modal__product" id="qualityHoldModalProduct"></p>
+        <p class="quality-modal__label" id="qualityHoldModalLabel"></p>
+        <div class="quality-modal__reason" id="qualityHoldModalReason"></div>
+        <p class="quality-modal__note">Nous revenons vers vous dès qu'un lot conforme à nos critères est disponible.</p>
+    </div>
+</div>
+<script>
+(function () {
+    var modal = document.getElementById('qualityHoldModal');
+    if (!modal) return;
+
+    var productEl = document.getElementById('qualityHoldModalProduct');
+    var labelEl   = document.getElementById('qualityHoldModalLabel');
+    var reasonEl  = document.getElementById('qualityHoldModalReason');
+    var lastFocus = null;
+
+    function open(trigger) {
+        lastFocus = trigger;
+        productEl.textContent = trigger.getAttribute('data-quality-title') || '';
+        var label = trigger.getAttribute('data-quality-label') || '';
+        labelEl.textContent = label;
+        labelEl.hidden = label === '';
+        reasonEl.textContent = trigger.getAttribute('data-quality-reason') || '';
+        modal.hidden = false;
+        document.body.classList.add('quality-modal-open');
+        var closeBtn = modal.querySelector('.quality-modal__close');
+        if (closeBtn) closeBtn.focus();
+    }
+
+    function close() {
+        modal.hidden = true;
+        document.body.classList.remove('quality-modal-open');
+        if (lastFocus && typeof lastFocus.focus === 'function') {
+            lastFocus.focus();
+        }
+    }
+
+    document.addEventListener('click', function (e) {
+        var trig = e.target.closest('[data-quality-modal]');
+        if (trig) {
+            e.preventDefault();
+            e.stopPropagation();
+            open(trig);
+            return;
+        }
+        if (e.target.closest('[data-quality-close]')) {
+            e.preventDefault();
+            close();
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !modal.hidden) close();
+    });
+})();
+</script>

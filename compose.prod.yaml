@@ -1,0 +1,83 @@
+---
+# Production environment override
+services:
+  php:
+    build:
+      context: .
+      target: frankenphp_prod
+    env_file:
+      - path: .env.prod.local
+        required: false
+    environment:
+      APP_ENV: prod
+      # HTTP simple : le TLS est terminé par le reverse proxy externe (réseau `web`)
+      # qui transmet à nidemiel_php:80. Un nom de domaine ici activerait l'auto-HTTPS
+      # de Caddy (ACME impossible + redirection HTTP→HTTPS en boucle derrière le proxy).
+      # La redirection www → apex est gérée dans frankenphp/Caddyfile via CANONICAL_HOST.
+      SERVER_NAME: ":80"
+    volumes:
+      - uploads_data:/app/public/assets/images
+      - videos_data:/app/public/assets/videos
+    networks:
+      default:
+      web:
+        aliases:
+          - nidemiel_php
+
+  messenger-worker:
+    env_file:
+      - path: .env.prod.local
+        required: false
+    environment:
+      APP_ENV: prod
+
+  database:
+    ports:
+      - "127.0.0.1:5432:5432"
+    env_file:
+      - path: .env.prod.local
+        required: false
+
+  netdata:
+    image: netdata/netdata:stable
+    container_name: netdata
+    pid: host
+    network_mode: host
+    restart: unless-stopped
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    env_file:
+      - path: .env.prod.local
+        required: false
+    volumes:
+      - netdataconfig:/etc/netdata
+      - netdatalib:/var/lib/netdata
+      - netdatacache:/var/cache/netdata
+      - /:/host/root:ro,rslave
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /var/log:/host/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /run/dbus:/run/dbus:ro
+    environment:
+      - NETDATA_CLAIM_TOKEN=${NETDATA_CLAIM_TOKEN}
+      - NETDATA_CLAIM_URL=https://app.netdata.cloud
+      - NETDATA_CLAIM_ROOMS=${NETDATA_CLAIM_ROOMS}
+
+volumes:
+  uploads_data:
+  videos_data:
+  netdataconfig:
+  netdatalib:
+  netdatacache:
+
+networks:
+  web:
+    external: true

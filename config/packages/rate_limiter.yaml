@@ -1,0 +1,21 @@
+framework:
+  rate_limiter:
+    stripe_webhook:
+      policy: fixed_window
+      limit: 120
+      interval: '1 minute'
+
+    contact_form:
+      policy: fixed_window
+      limit: 5
+      interval: '1 minute'
+
+    app_login:
+      policy: sliding_window
+      limit: 5
+      interval: '1 minute'
+
+    search:
+      policy: sliding_window
+      limit: 60
+      interval: '1 minute'

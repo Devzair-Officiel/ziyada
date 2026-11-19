@@ -1,0 +1,14 @@
+sentry:
+    dsn: '%env(SENTRY_DSN)%'
+    register_error_listener: true
+    options:
+        environment: '%kernel.environment%'
+        traces_sample_rate: '%env(float:default::SENTRY_TRACES_SAMPLE_RATE)%'
+        ignore_exceptions:
+            - Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+            - Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
+            - Symfony\Component\Security\Core\Exception\AccessDeniedException
+
+when@dev:
+    sentry:
+        dsn: null

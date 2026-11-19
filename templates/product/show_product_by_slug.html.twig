@@ -1,0 +1,712 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+	{% set _preloadCover = product.coverFilename %}
+	{% if _preloadCover %}
+	<link rel="preload" as="image" href="/assets/images/products/{{ _preloadCover|split('.')|slice(0, -1)|join('.') }}-medium.webp" fetchpriority="high">
+	{% endif %}
+	<link rel="stylesheet" href="/assets/css/slick.css" media="print" onload="this.media='all'">
+	<link rel="stylesheet" href="/assets/css/slick-theme.css" media="print" onload="this.media='all'">
+	<link rel="stylesheet" href="/assets/css/magnific-popup.css" media="print" onload="this.media='all'">
+	<noscript>
+		<link rel="stylesheet" href="/assets/css/slick.css">
+		<link rel="stylesheet" href="/assets/css/slick-theme.css">
+		<link rel="stylesheet" href="/assets/css/magnific-popup.css">
+	</noscript>
+{% endblock %}
+
+{% block page_scripts %}
+	<script src="/assets/js/slick.min.js" defer></script>
+	<script src="/assets/js/jquery.elevatezoom.js" defer></script>
+	<script src="/assets/js/magnific-popup.min.js" defer></script>
+	<script>
+	// Bascule image ↔ vidéo dans le viewer principal quand une miniature vidéo
+	// est cliquée. Les miniatures image conservent leur handler existant (elevateZoom).
+	(function () {
+		var gallery = document.getElementById('pr_item_gallery');
+		var viewer  = document.getElementById('pr_video_viewer');
+		var mainImg = document.getElementById('product_img');
+		if (!gallery || !viewer || !mainImg) return;
+
+		var zoomBtn = document.querySelector('.nide-pd__zoom-btn');
+
+		function showImage() {
+			// On stoppe toute vidéo/iframe en vidant le viewer (coupe le son proprement).
+			viewer.innerHTML = '';
+			viewer.hidden = true;
+			mainImg.hidden = false;
+			if (zoomBtn) zoomBtn.hidden = false;
+			var zc = document.querySelector('.zoomContainer');
+			if (zc) zc.style.visibility = '';
+		}
+
+		function showVideo(kind, src, title) {
+			if (!src) return;
+			viewer.innerHTML = '';
+
+			var node;
+			if (kind === 'upload') {
+				node = document.createElement('video');
+				node.src = src;
+				node.controls = true;
+				node.preload = 'metadata';
+				node.playsInline = true;
+				node.setAttribute('playsinline', '');
+				if (title) node.setAttribute('aria-label', title);
+			} else {
+				node = document.createElement('iframe');
+				node.src = src + (src.indexOf('?') === -1 ? '?' : '&') + 'autoplay=1';
+				node.title = title || 'Vidéo du produit';
+				node.loading = 'lazy';
+				node.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+				node.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+				node.allowFullscreen = true;
+			}
+			viewer.appendChild(node);
+
+			mainImg.hidden = true;
+			if (zoomBtn) zoomBtn.hidden = true;
+			var zc = document.querySelector('.zoomContainer');
+			if (zc) zc.style.visibility = 'hidden';
+			viewer.hidden = false;
+
+			if (kind === 'upload' && typeof node.play === 'function') {
+				var p = node.play();
+				if (p && typeof p.catch === 'function') { p.catch(function () {}); }
+			}
+		}
+
+		gallery.addEventListener('click', function (e) {
+			var videoThumb = e.target.closest('.product_gallery_video_item');
+			if (videoThumb) {
+				e.preventDefault();
+				gallery.querySelectorAll('.nide-pd__thumb-link').forEach(function (el) { el.classList.remove('active'); });
+				videoThumb.classList.add('active');
+				showVideo(
+					videoThumb.getAttribute('data-video-kind'),
+					videoThumb.getAttribute('data-video-src'),
+					videoThumb.getAttribute('data-video-title')
+				);
+				return;
+			}
+
+			// Miniature image : le swap est géré par scripts.js. On restaure juste le viewer image.
+			if (e.target.closest('.product_gallery_item')) {
+				showImage();
+			}
+		});
+	})();
+	</script>
+
+	<script>
+	document.querySelectorAll('.stock-alert-form').forEach(function(form) {
+		form.addEventListener('submit', function(e) {
+			e.preventDefault();
+			var action   = form.dataset.action;
+			var feedback = form.closest('.stock-alert-box').querySelector('.stock-alert-feedback');
+			var data     = new FormData(form);
+			fetch(action, { method: 'POST', body: data })
+				.then(function(r) { return r.json(); })
+				.then(function(json) {
+					feedback.textContent = json.message || json.error || '';
+					feedback.className   = 'stock-alert-feedback small mt-1 ' + (json.error ? 'text-danger' : 'text-success');
+					if (!json.error) { setTimeout(function() { location.reload(); }, 1500); }
+				})
+				.catch(function() { feedback.textContent = 'Une erreur est survenue.'; });
+		});
+	});
+	</script>
+{% endblock %}
+
+{% block title %}{{ globalSetting.website_name }} | {{ product.title }}{% endblock %}
+
+{% block meta_description %}Découvrez {{ product.title }} — {{ product.description|striptags|slice(0, 150) }}{% endblock %}
+
+{% set link_canonical = app.request.uri %}
+
+{% block body %}
+
+{# ── attrMap depuis additionalInfos ── #}
+{% set attrMap = {} %}
+{% if product.additionalInfos %}
+	{% set rawLines = product.additionalInfos
+		|replace({'<br>': '\n', '<br/>': '\n', '<br />': '\n', '</p>': '\n', '</li>': '\n', '&nbsp;': ' '})
+		|striptags %}
+	{% for line in rawLines|split('\n') %}
+		{% set line = line|trim %}
+		{% if ':' in line %}
+			{% set parts = line|split(':', 2) %}
+			{% set attrMap = attrMap|merge({(parts[0]|trim|lower): parts[1]|trim}) %}
+		{% endif %}
+	{% endfor %}
+{% endif %}
+
+{% set firstCategory = product.categories|first %}
+{% include 'page_head/index.html.twig' with {
+	page_name: product.title,
+	breadcrumbs: firstCategory ? [
+		{
+			label: firstCategory.title,
+			url: path('app_category', { categoryName: firstCategory.slug })
+		},
+		{ label: product.title }
+	] : [
+		{ label: product.title }
+	]
+} %}
+
+<div class="nide-pd">
+<div class="nide-pd__container">
+
+{# ════════════════════════════════════════
+   HÉRO — image (gauche) + carte info (droite)
+   ════════════════════════════════════════ #}
+<div class="nide-pd__hero">
+
+	{# ── Image ── #}
+	{# Sépare images et vidéos : la galerie zoom ne gère que les images.
+	   Les vidéos partagent la même bande de miniatures : clic sur une miniature
+	   vidéo → le viewer bascule de <img> vers <video>/<iframe>. #}
+	{% set productImages = [] %}
+	{% set productVideos = [] %}
+	{% for m in product.medias %}
+		{% if m.image %}
+			{% set productImages = productImages|merge([m]) %}
+		{% elseif m.video and (m.videoUpload or m.videoEmbedUrl) %}
+			{% set productVideos = productVideos|merge([m]) %}
+		{% endif %}
+	{% endfor %}
+	{% set mainMedia = productImages|first %}
+	{% set _qhOn = product.isOnQualityHold %}
+	<div class="nide-pd__left">
+		<div class="nide-pd__img-wrap{% if _qhOn %} nide-pd__img-wrap--quality-hold{% endif %}">
+			<img
+				id="product_img"
+				alt="{{ mainMedia ? (mainMedia.alt ?: product.title) : product.title }}"
+				src="{{ mainMedia ? '/assets/images/products/' ~ mainMedia.mediumFilename : '/assets/images/placeholder.png' }}"
+				data-zoom-image="{{ mainMedia ? '/assets/images/products/' ~ mainMedia.filename : '' }}"
+				fetchpriority="high" loading="eager" decoding="async"
+			>
+			{% if mainMedia %}
+			<a href="/assets/images/products/{{ mainMedia.filename }}"
+			   title="Agrandir" class="nide-pd__zoom-btn product_img_zoom"
+			   aria-label="Agrandir l'image">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+			</a>
+			{% endif %}
+
+			{# Slot rempli dynamiquement quand une miniature vidéo est cliquée. #}
+			<div class="nide-pd__video-viewer" id="pr_video_viewer" hidden aria-live="polite"></div>
+		</div>
+
+		{% if productImages|length + productVideos|length > 1 %}
+		<div class="nide-pd__thumbs" id="pr_item_gallery">
+			{% for image in productImages %}
+			<a href="javascript:void(0)"
+			   class="nide-pd__thumb-link product_gallery_item {% if loop.first %}active{% endif %}"
+			   data-image="/assets/images/products/{{ image.mediumFilename }}"
+			   data-zoom-image="/assets/images/products/{{ image.filename }}"
+			   aria-label="Image {{ loop.index }}">
+				<img src="/assets/images/products/{{ image.thumbnailFilename }}"
+				     alt="{{ image.alt|default('') }}" width="70" height="64" loading="lazy">
+			</a>
+			{% endfor %}
+
+			{% for video in productVideos %}
+			<a href="javascript:void(0)"
+			   class="nide-pd__thumb-link nide-pd__thumb-link--video product_gallery_video_item"
+			   data-video-kind="{{ video.videoUpload ? 'upload' : 'embed' }}"
+			   data-video-src="{{ video.videoUpload ? '/assets/videos/products/' ~ video.filename : video.videoEmbedUrl }}"
+			   data-video-title="{{ video.alt ?: 'Vidéo du produit ' ~ product.title }}"
+			   aria-label="Vidéo {{ loop.index }}">
+				{% if video.videoThumbnailUrl %}
+					<img src="{{ video.videoThumbnailUrl }}"
+					     alt="{{ video.alt|default('') }}" width="70" height="64" loading="lazy" referrerpolicy="no-referrer">
+				{% else %}
+					<span class="nide-pd__thumb-video-bg" aria-hidden="true"></span>
+				{% endif %}
+				<span class="nide-pd__thumb-play" aria-hidden="true">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+				</span>
+			</a>
+			{% endfor %}
+		</div>
+		{% endif %}
+	</div>
+
+	{# ── Carte info ── #}
+	<div class="nide-pd__info-card">
+
+		<div class="nide-pd__eyebrow">
+			SÉLECTION NIDEMIEL
+			<span class="nide-pd__eyebrow-dot" aria-hidden="true"></span>
+			ÉPICERIE FINE
+		</div>
+
+		<h1 class="nide-pd__title">{{ product.title }}</h1>
+
+		{% if product.accroche %}
+		<p class="nide-pd__accroche">{{ product.accroche }}</p>
+		{% endif %}
+
+		{% if product.originCountry or product.isHasLabAnalysis %}
+		<div class="nide-pd__chips">
+			{% if product.originCountry %}
+			<span class="nide-pd__chip nide-pd__chip--origin">
+				<span class="nide-pd__chip-dot" aria-hidden="true"></span>
+				Origine&nbsp;: <strong>{{ product.originCountry }}</strong>
+			</span>
+			{% endif %}
+			{% if product.isHasLabAnalysis %}
+			<span class="nide-pd__chip nide-pd__chip--lab">Analyse labo disponible</span>
+			{% endif %}
+		</div>
+		{% endif %}
+
+		{% if averageRating is not null %}
+		<div class="nide-pd__rating">
+			<div class="nide-pd__stars"><div class="nide-pd__stars-fill" style="width: {{ ((averageRating / 5) * 100)|round }}%;"></div></div>
+			<span class="nide-pd__rating-label">{{ averageRating }}/5 · {{ product.approvedReviewsCount }} avis</span>
+		</div>
+		{% endif %}
+
+		<div class="nide-pd__price-row">
+			{% if product.isOnSale %}
+				<span class="nide-pd__price">{{ (product.soldePrice / 100)|number_format(2, ',', '\u{202f}') }}&nbsp;€</span>
+				<span class="nide-pd__price-old">{{ (product.regularPrice / 100)|number_format(2, ',', '\u{202f}') }}&nbsp;€</span>
+				<span class="nide-pd__price-badge">-{{ product.discountPercentage }}&nbsp;%</span>
+			{% else %}
+				<span class="nide-pd__price">{{ (product.regularPrice / 100)|number_format(2, ',', '\u{202f}') }}&nbsp;€</span>
+			{% endif %}
+			{% if product.weightGrams %}
+			<span class="nide-pd__price-unit">/ pot {% if product.weightGrams >= 1000 %}{{ (product.weightGrams / 1000)|number_format(1, ',') }}&nbsp;kg{% else %}{{ product.weightGrams }}&nbsp;g{% endif %}</span>
+			{% endif %}
+		</div>
+
+		{% set inStock = availableStock is null or availableStock > 0 %}
+		{% if _qhOn %}
+		<div class="nide-pd__quality-hold" role="alert">
+			<div class="nide-pd__quality-hold-hd">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+				<strong>{{ product.qualityHoldLabel ?: 'Miel actuellement indisponible' }}</strong>
+			</div>
+			<p class="nide-pd__quality-hold-text">{{ product.qualityHoldReason }}</p>
+			<button type="button"
+			        class="nide-pd__quality-hold-more"
+			        data-quality-modal
+			        data-quality-title="{{ product.title }}"
+			        data-quality-label="{{ product.qualityHoldLabel|default('') }}"
+			        data-quality-reason="{{ product.qualityHoldReason }}">
+				Voir le détail
+			</button>
+		</div>
+		<div class="nide-pd__actions nide-pd__actions--out">
+			<button class="nide-pd__btn-cart nide-pd__btn-cart--disabled" disabled>Indisponible</button>
+		</div>
+		{% elseif inStock %}
+		<div class="nide-pd__actions">
+			<div class="nide-pd__qty-stepper">
+				<button type="button" class="nide-pd__qty-btn minus" aria-label="Diminuer">−</button>
+				<span class="nide-pd__qty-val" id="pd-qty-val">1</span>
+				<button type="button" class="nide-pd__qty-btn plus" aria-label="Augmenter">+</button>
+			</div>
+			<a href="/cart/add/{{ product.id }}/1" class="nide-pd__btn-cart btn-addtocart">
+				Ajouter au panier
+			</a>
+			<a href="/wishlist/add/{{ product.id }}" class="nide-pd__btn-wish add-to-wishlist" aria-label="Ajouter aux favoris">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+			</a>
+		</div>
+		{% else %}
+		<div class="nide-pd__actions nide-pd__actions--out">
+			<button class="nide-pd__btn-cart nide-pd__btn-cart--disabled" disabled>Indisponible</button>
+		</div>
+		<div class="stock-alert-box nide-pd__alert">
+			{% set userEmail = app.user ? app.user.email : null %}
+			{% if stockAlertSubscribed %}
+				<p class="nide-pd__alert-msg nide-pd__alert-msg--ok">Vous serez alerté dès le retour en stock.</p>
+				<form class="stock-alert-form" data-action="{{ path('app_stock_alert_unsubscribe', { id: product.id }) }}" data-mode="unsubscribe">
+					<input type="hidden" name="email" value="{{ userEmail ?? '' }}">
+					<button type="submit" class="btn btn-sm btn-outline-secondary">Annuler l'alerte</button>
+				</form>
+			{% else %}
+				<p class="nide-pd__alert-msg">Recevez un e-mail dès que ce produit est disponible.</p>
+				<form class="stock-alert-form nide-pd__alert-form" data-action="{{ path('app_stock_alert_subscribe', { id: product.id }) }}" data-mode="subscribe">
+					{% if not app.user %}
+						<input type="email" name="email" class="form-control form-control-sm" placeholder="votre@email.fr" required>
+					{% else %}
+						<input type="hidden" name="email" value="{{ userEmail }}">
+					{% endif %}
+					<button type="submit" class="btn btn-sm btn-outline-dark">M'alerter</button>
+				</form>
+			{% endif %}
+			<div class="stock-alert-feedback small mt-1"></div>
+		</div>
+		{% endif %}
+
+		<div class="nide-pd__facts">
+			<div class="nide-pd__fact">
+				<span class="nide-pd__fact-label">Texture</span>
+				<span class="nide-pd__fact-val">{{ attrMap['texture'] ?? attrMap['consistance'] ?? '—' }}</span>
+			</div>
+			<div class="nide-pd__fact">
+				<span class="nide-pd__fact-label">Couleur</span>
+				<span class="nide-pd__fact-val">{{ attrMap['couleur'] ?? '—' }}</span>
+			</div>
+			<div class="nide-pd__fact">
+				<span class="nide-pd__fact-label">Poids net</span>
+				<span class="nide-pd__fact-val">{% if product.weightGrams %}{% if product.weightGrams >= 1000 %}{{ (product.weightGrams / 1000)|number_format(1, ',') }}&nbsp;kg{% else %}{{ product.weightGrams }}&nbsp;g{% endif %}{% else %}—{% endif %}</span>
+			</div>
+		</div>
+
+		{% set hasTasting = product.tastingIntensity or product.tastingAromatic or product.tastingSweetness or product.tastingFluidity %}
+		{% if hasTasting %}
+		<div class="nide-pd__tasting">
+			<div class="nide-pd__tasting-hd">PROFIL GUSTATIF</div>
+			<div class="nide-pd__bars">
+				{% if product.tastingIntensity is not null %}
+				<div class="nide-pd__bar-row">
+					<span class="nide-pd__bar-lbl">Intensité</span>
+					<div class="nide-pd__bar-track"><div class="nide-pd__bar-fill" style="width: {{ product.tastingIntensity }}%"></div></div>
+				</div>
+				{% endif %}
+				{% if product.tastingAromatic is not null %}
+				<div class="nide-pd__bar-row">
+					<span class="nide-pd__bar-lbl">Aromatique</span>
+					<div class="nide-pd__bar-track"><div class="nide-pd__bar-fill" style="width: {{ product.tastingAromatic }}%"></div></div>
+				</div>
+				{% endif %}
+				{% if product.tastingSweetness is not null %}
+				<div class="nide-pd__bar-row">
+					<span class="nide-pd__bar-lbl">Douceur</span>
+					<div class="nide-pd__bar-track"><div class="nide-pd__bar-fill" style="width: {{ product.tastingSweetness }}%"></div></div>
+				</div>
+				{% endif %}
+				{% if product.tastingFluidity is not null %}
+				<div class="nide-pd__bar-row">
+					<span class="nide-pd__bar-lbl">Fluidité</span>
+					<div class="nide-pd__bar-track"><div class="nide-pd__bar-fill" style="width: {{ product.tastingFluidity }}%"></div></div>
+				</div>
+				{% endif %}
+			</div>
+			{% if product.tastingTags %}
+			<div class="nide-pd__tasting-tags">
+				{% for tag in product.tastingTags|split(',') %}
+				<span class="nide-pd__tag">{{ tag|trim }}</span>
+				{% endfor %}
+			</div>
+			{% endif %}
+		</div>
+		{% endif %}
+
+		<p class="nide-pd__guide-link">
+			Nouveau au miel&nbsp;?
+			<a href="{{ path('app_guide_sensoriel') }}">Consultez notre guide sensoriel</a>
+			pour apprendre à le déguster.
+		</p>
+
+		<div class="nide-pd__reassurance">
+			<span><span class="nide-pd__ri">✓</span>Produit certifié</span>
+			<span><span class="nide-pd__ri">↺</span>Retour 30 jours</span>
+			<span><span class="nide-pd__ri">✦</span>Paiement sécurisé</span>
+		</div>
+
+	</div>{# fin info-card #}
+</div>{# fin hero #}
+
+{# ════════════════════════════════════════
+   ONGLETS
+   ════════════════════════════════════════ #}
+<div class="nide-pd__tabs-section">
+<div class="nide-pd__tabs-card">
+	<div class="nide-pd__tabs-nav" role="tablist">
+		<button class="nide-pd__tab nide-pd__tab--active" data-tab="desc" role="tab" aria-selected="true">Description</button>
+		<button class="nide-pd__tab" data-tab="infos" role="tab" aria-selected="false">Plus d'infos</button>
+		<button class="nide-pd__tab" data-tab="caract" role="tab" aria-selected="false">Caractéristiques &amp; Analyse</button>
+		<button class="nide-pd__tab" data-tab="avis" role="tab" aria-selected="false">Avis</button>
+	</div>
+
+	{# ── Description ── #}
+	<div class="nide-pd__tab-content nide-pd__tab-content--active" id="nide-tab-desc" role="tabpanel">
+		<div class="nide-pd__tab-grid nide-pd__tab-grid--full">
+			{% if product.description %}
+			<div class="nide-pd__desc-body nide-page-content">{{ product.description|normalize_editor_html|raw }}</div>
+			{% endif %}
+		</div>
+	</div>
+
+	{# ── Plus d'infos ── #}
+	<div class="nide-pd__tab-content" id="nide-tab-infos" role="tabpanel" hidden>
+		<div class="nide-pd__tab-grid nide-pd__tab-grid--full">
+			{% if product.moreDescription %}
+			<div class="nide-pd__more-body nide-page-content">{{ product.moreDescription|normalize_editor_html|raw }}</div>
+			{% endif %}
+		</div>
+	</div>
+
+	{# ── Caractéristiques & Analyse ── #}
+	<div class="nide-pd__tab-content" id="nide-tab-caract" role="tabpanel" hidden>
+		<div class="nide-pd__caract-layout">
+
+			{# ── Gauche : Caractéristiques produit ── #}
+			{% if product.weightGrams or product.originCountry or attrMap|length > 0 %}
+			<div class="nide-pd__charac-card">
+				<div class="nide-pd__charac-hd">CARACTÉRISTIQUES PRODUIT</div>
+				{% if product.weightGrams %}
+				<div class="nide-pd__charac-row">
+					<span class="nide-pd__charac-key"><span class="nide-pd__charac-icon">◆</span>Poids net</span>
+					<span class="nide-pd__charac-val">{% if product.weightGrams >= 1000 %}{{ (product.weightGrams / 1000)|number_format(1, ',') }}&nbsp;kg{% else %}{{ product.weightGrams }}&nbsp;g{% endif %}</span>
+				</div>
+				{% endif %}
+				{% set _displayOrigin = attrMap['origine'] ?? attrMap['origin'] ?? product.originCountry ?? null %}
+				{% if _displayOrigin %}
+				<div class="nide-pd__charac-row">
+					<span class="nide-pd__charac-key"><span class="nide-pd__charac-icon">◆</span>Origine</span>
+					<span class="nide-pd__charac-val">{{ _displayOrigin }}</span>
+				</div>
+				{% endif %}
+				{% set _hiddenKeys = ['poids net', 'poids', 'origine', 'origin', 'analyse', 'analysis'] %}
+				{% for key, val in attrMap %}
+				{% if key not in _hiddenKeys %}
+				<div class="nide-pd__charac-row">
+					<span class="nide-pd__charac-key"><span class="nide-pd__charac-icon">◆</span>{{ key|capitalize }}</span>
+					<span class="nide-pd__charac-val">{{ val }}</span>
+				</div>
+				{% endif %}
+				{% endfor %}
+			</div>
+			{% endif %}
+
+			{# ── Droite : Analyse laboratoire ── #}
+			{% set lab = product.labAnalysisDecoded %}
+			{% if product.isHasLabAnalysis and lab and lab.available is defined and lab.available %}
+			<div class="nide-pd__lab-widget">
+				<div class="nide-pd__lab-widget-hd">
+					<span class="nide-pd__lab-widget-title">◇ ANALYSE LABORATOIRE</span>
+					{% if lab.reference is defined %}<span class="nide-pd__lab-widget-ref">réf. {{ lab.reference }}</span>{% endif %}
+				</div>
+				<div class="nide-pd__lab-widget-grid">
+
+					{% set hum = lab.parameters.humidity ?? null %}
+					{% if hum is not null and hum.requested %}
+					<div class="nide-pd__lab-widget-cell">
+						<span class="nide-pd__lab-widget-lbl">Humidité</span>
+						<div class="nide-pd__lab-widget-val">{{ hum.value|number_format(1, ',') }}&nbsp;%</div>
+						{% if hum.note is defined and hum.note %}<span class="nide-pd__lab-widget-note">{{ hum.note }}</span>{% endif %}
+					</div>
+					{% endif %}
+
+					{% set cond = lab.parameters.conductivity ?? null %}
+					{% if cond is not null and cond.requested %}
+					<div class="nide-pd__lab-widget-cell">
+						<span class="nide-pd__lab-widget-lbl">Conductivité</span>
+						<div class="nide-pd__lab-widget-val">{{ cond.value|number_format(2, ',') }}&nbsp;mS/cm</div>
+						{% if cond.note is defined and cond.note %}<span class="nide-pd__lab-widget-note">{{ cond.note }}</span>{% endif %}
+					</div>
+					{% endif %}
+
+					{% set ph = lab.parameters.ph ?? null %}
+					{% if ph is not null and ph.requested %}
+					<div class="nide-pd__lab-widget-cell">
+						<span class="nide-pd__lab-widget-lbl">pH</span>
+						<div class="nide-pd__lab-widget-val">{{ ph.value|number_format(2, ',') }}</div>
+						{% if ph.note is defined and ph.note %}<span class="nide-pd__lab-widget-note">{{ ph.note }}</span>{% endif %}
+					</div>
+					{% endif %}
+
+					{% set pollen = lab.pollenAnalysis ?? null %}
+					{% if pollen is not null and pollen.available is not defined and pollen.pollenPercentages is defined and pollen.pollenPercentages|length > 0 %}
+					<div class="nide-pd__lab-widget-cell">
+						<span class="nide-pd__lab-widget-lbl">Pollen dominant</span>
+						<div class="nide-pd__lab-widget-val">{{ pollen.pollenPercentages[0].pollen }} {{ pollen.pollenPercentages[0].value }}&nbsp;%</div>
+					</div>
+					{% endif %}
+
+					{% if cond is not null and cond.classification is defined and cond.classification %}
+					<div class="nide-pd__lab-widget-cell">
+						<span class="nide-pd__lab-widget-lbl">Classification</span>
+						<div class="nide-pd__lab-widget-val">{{ cond.classification }}</div>
+					</div>
+					{% endif %}
+
+					{% set mgo = lab.parameters.mgo ?? null %}
+					{% if mgo is not null and mgo.requested %}
+					<div class="nide-pd__lab-widget-cell">
+						<span class="nide-pd__lab-widget-lbl">MGO</span>
+						<div class="nide-pd__lab-widget-val">{{ mgo.value|number_format(0, ',', '') }}&nbsp;mg/kg</div>
+					</div>
+					{% endif %}
+
+					{% set npa = lab.parameters.npa ?? null %}
+					{% if npa is not null and npa.requested %}
+					<div class="nide-pd__lab-widget-cell">
+						<span class="nide-pd__lab-widget-lbl">NPA</span>
+						<div class="nide-pd__lab-widget-val">{{ npa.value|number_format(1, ',') }}&nbsp;% Phénol&nbsp;Éq.</div>
+					</div>
+					{% endif %}
+
+					{% set dha = lab.parameters.dha ?? null %}
+					{% if dha is not null and dha.requested %}
+					<div class="nide-pd__lab-widget-cell">
+						<span class="nide-pd__lab-widget-lbl">DHA</span>
+						<div class="nide-pd__lab-widget-val">{{ dha.value|number_format(0, ',', '') }}&nbsp;mg/kg</div>
+					</div>
+					{% endif %}
+
+					{% set hmf = lab.parameters.hmf ?? null %}
+					{% if hmf is not null and hmf.requested %}
+					<div class="nide-pd__lab-widget-cell">
+						<span class="nide-pd__lab-widget-lbl">HMF</span>
+						<div class="nide-pd__lab-widget-val">{{ hmf.value|number_format(1, ',') }}&nbsp;mg/kg</div>
+					</div>
+					{% endif %}
+
+				</div>
+
+				{% if lab.limits is defined and lab.limits|length > 0 %}
+				<p class="nide-pd__lab-widget-disclaimer">{{ lab.limits[0] }}</p>
+				{% endif %}
+
+				{% if lab.labName is defined %}
+				<div class="nide-pd__lab-widget-footer">
+					<span class="nide-pd__lab-widget-labname">Analyse : {{ lab.labName }}</span>
+					{% if lab.reportDate is defined %}<span class="nide-pd__lab-widget-labdate">{{ lab.reportDate }}</span>{% endif %}
+				</div>
+				{% endif %}
+			</div>
+			{% endif %}
+
+		</div>
+	</div>
+
+	{# ── Avis ── #}
+	<div class="nide-pd__tab-content" id="nide-tab-avis" role="tabpanel" hidden>
+		<div class="nide-pd__avis-wrap">
+			{% include 'product/_reviews.html.twig' %}
+		</div>
+	</div>
+
+</div>
+</div>
+
+{# ════════════════════════════════════════
+   PRODUITS LIÉS
+   ════════════════════════════════════════ #}
+{% if relatedProducts is not empty %}
+<div class="nide-pd__related">
+	<h2 class="nide-pd__related-title">Vous apprécierez également</h2>
+	<div class="nide-pd__related-grid">
+		{% for related in relatedProducts %}
+		{% set relCover = related.coverFilename %}
+		{% set relThumbName = relCover ? relCover|split('.')|slice(0, -1)|join('.') ~ '-thumb.webp' : null %}
+		<div class="nide-card">
+			<div class="nide-card__media">
+				<a href="{{ path('app_product_by_slug', { slug: related.slug }) }}" class="nide-card__img-link" tabindex="-1" aria-hidden="true">
+					<img class="nide-card__img"
+					     alt="{{ related.title }}"
+					     src="{{ relThumbName ? '/assets/images/products/' ~ relThumbName : '/assets/images/placeholder.png' }}"
+					     loading="lazy" decoding="async">
+				</a>
+				<ul class="nide-card__actions list_none" aria-label="Actions rapides">
+					{% if related.stock != 0 %}
+					<li>
+						<a href="/cart/add/{{ related.id }}/1" class="nide-card__action add-to-cart" title="Ajouter au panier" aria-label="Ajouter {{ related.title }} au panier">
+							<svg class="icon" aria-hidden="true"><use href="#icon-cart"></use></svg>
+						</a>
+					</li>
+					{% endif %}
+					<li>
+						<a href="/wishlist/add/{{ related.id }}" class="nide-card__action add-to-wishlist" title="Wishlist" aria-label="Favoris">
+							<svg class="icon" aria-hidden="true"><use href="#icon-heart"></use></svg>
+						</a>
+					</li>
+				</ul>
+			</div>
+			<a href="{{ path('app_product_by_slug', { slug: related.slug }) }}" class="nide-card__body">
+				{% if related.originCountry %}
+				<span class="nide-card__origin">{{ related.originCountry|country_name('fr') }}</span>
+				{% endif %}
+				<h3 class="nide-card__title">{{ related.title }}</h3>
+				{% if related.tastingProfile %}
+				<p class="nide-card__tasting">{{ related.tastingProfile }}</p>
+				{% endif %}
+				<div class="nide-card__footer">
+					<div class="nide-card__price">
+						{% if related.isOnSale %}
+						<span class="nide-card__price--current">{{ (related.soldePrice / 100)|number_format(2, ',', ' ') }}&nbsp;€</span>
+						<span class="nide-card__price--old">{{ (related.regularPrice / 100)|number_format(2, ',', ' ') }}&nbsp;€</span>
+						{% else %}
+						<span class="nide-card__price--current">{{ (related.regularPrice / 100)|number_format(2, ',', ' ') }}&nbsp;€</span>
+						{% endif %}
+					</div>
+				</div>
+			</a>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endif %}
+
+</div>{# fin container #}
+</div>{# fin nide-pd #}
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+	/* ── Tabs ── */
+	var tabs   = document.querySelectorAll('.nide-pd__tab');
+	var panels = document.querySelectorAll('.nide-pd__tab-content');
+	tabs.forEach(function (tab) {
+		tab.addEventListener('click', function () {
+			var target = this.dataset.tab;
+			tabs.forEach(function (t) { t.classList.remove('nide-pd__tab--active'); t.setAttribute('aria-selected', 'false'); });
+			panels.forEach(function (p) { p.classList.remove('nide-pd__tab-content--active'); p.setAttribute('hidden', ''); });
+			this.classList.add('nide-pd__tab--active');
+			this.setAttribute('aria-selected', 'true');
+			// Barre défilable sur mobile : ramène l'onglet choisi dans le champ.
+			this.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+			var panel = document.getElementById('nide-tab-' + target);
+			if (panel) { panel.classList.add('nide-pd__tab-content--active'); panel.removeAttribute('hidden'); }
+		});
+	});
+
+	/* ── Qty stepper + sync lien panier ── */
+	var qty       = 1;
+	var qtyEl     = document.getElementById('pd-qty-val');
+	var productId = {{ product.id }};
+	{% if availableStock is not null %}var maxStock = {{ availableStock }};{% else %}var maxStock = null;{% endif %}
+
+	function setQty(n) {
+		qty = Math.max(1, maxStock !== null ? Math.min(maxStock, n) : n);
+		if (qtyEl) qtyEl.textContent = qty;
+		var link = document.querySelector('.btn-addtocart');
+		if (link) link.href = '/cart/add/' + productId + '/' + qty;
+	}
+
+	document.addEventListener('click', function (e) {
+		if (e.target.classList.contains('plus'))  setQty(qty + 1);
+		if (e.target.classList.contains('minus')) setQty(qty - 1);
+	});
+
+	/* ── Gallery thumbs ── */
+	document.querySelectorAll('.product_gallery_item').forEach(function (link) {
+		link.addEventListener('click', function (e) {
+			e.preventDefault();
+			var mainImg = document.getElementById('product_img');
+			if (mainImg && this.dataset.image) {
+				mainImg.src = this.dataset.image;
+				mainImg.dataset.zoomImage = this.dataset.zoomImage || '';
+			}
+			document.querySelectorAll('.nide-pd__thumb-link').forEach(function (l) { l.classList.remove('active'); });
+			this.classList.add('active');
+		});
+	});
+});
+</script>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion | {{ globalSetting.website_name }}
+{% endblock %}
+
+{% block body %}
+
+{% include "page_head/index.html.twig" with {'page_name' : 'Formulaire de connexion'}  %}
+
+	<div class="main_content">
+		<div class="login_register_wrap section">
+			<div class="container">
+				<div class="row justify-content-center">
+					<div class="col-xl-6 col-md-10">
+						<div class="login_wrap">
+							<div class="padding_eight_all bg-white">
+								<div class="heading_s1">
+									<h3>Login</h3>
+								</div>
+								<form method="post" class="ng-untouched ng-pristine ng-invalid">
+
+									{% if error %}
+										<div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+									{% endif %}
+
+									{% if app.user %}
+										<div class="mb-3">
+											Vous êtes connecté 
+											{{ app.user.userIdentifier }},
+											<a href="{{ logout_path() }}">Logout</a>
+										</div>
+									{% endif %}
+
+
+									<div class="form-group mb-3">
+										<input type="text" name="email" value="{{ last_username }}" formcontrolname="email" placeholder="Votre Email" class="form-control ng-untouched ng-pristine ng-invalid" autocomplete="email" required autofocus>
+									</div>
+									<div class="form-group mb-3">
+										<input type="password" formcontrolname="password" name="password" placeholder="Votre mot de passe" class="form-control ng-untouched ng-pristine ng-invalid" autocomplete="current-password" required>
+									</div>
+                                    
+                                    <div class="login_footer form-group mb-3 d-flex justify-content-between align-items-center">
+                                        <div class="chek-form">
+                                            <div class="custome-checkbox">
+                                                <input type="checkbox" name="_remember_me" id="rememberMe" value="on" style="display:none">
+                                                <label for="rememberMe" class="form-check-label">
+                                                    <span>Se souvenir de moi</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <a href="{{ path('app_forgot_password_request') }}">Mot de passe oublié ?</a>
+                                    </div>
+
+									<input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
+									<input type="hidden" name="_captcha" id="login_captcha">
+
+									<div class="form-group mb-3">
+										<button type="submit" name="login" class="btn btn-fill-out btn-block">Se connecter</button>
+									</div>
+								</form>
+								<div class="different_login">
+									<span>Ou</span>
+										
+								</div>
+								<ul class="btn-login list_none text-center">
+									<li>
+										<a href="{{ path('connect_google_start') }}" class="btn btn-google">
+											<svg class="icon icon--filled" aria-hidden="true"><use href="#icon-google"></use></svg>Google</a>
+									</li>
+								</ul>
+								<div class="form-note text-center">Vous n'avez pas de compte ?
+									<a href="/register">Inscrivez-vous maintenant</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+(function () {
+    var siteKey = '{{ recaptcha3_site_key }}';
+    var loaded = false;
+    function loadRecaptcha(cb) {
+        if (loaded) { cb && grecaptcha.ready(cb); return; }
+        loaded = true;
+        var s = document.createElement('script');
+        s.src = 'https://www.google.com/recaptcha/api.js?render=' + siteKey;
+        s.onload = function () { cb && grecaptcha.ready(cb); };
+        document.head.appendChild(s);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('input[type="password"]').forEach(function (input) {
+            const wrapper = document.createElement('div');
+            wrapper.style.position = 'relative';
+            input.parentNode.insertBefore(wrapper, input);
+            wrapper.appendChild(input);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#icon-eye"></use></svg>';
+            btn.style.cssText = 'position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:#888;';
+            btn.setAttribute('aria-label', 'Afficher le mot de passe');
+            btn.addEventListener('click', function () {
+                input.type = input.type === 'password' ? 'text' : 'password';
+            });
+            wrapper.appendChild(btn);
+        });
+
+        const formEl = document.querySelector('form');
+        const captchaInput = document.getElementById('login_captcha');
+        if (!formEl || !captchaInput) return;
+
+        formEl.addEventListener('focusin', function () { loadRecaptcha(); }, { once: true });
+        formEl.addEventListener('submit', function (e) {
+            if (captchaInput.value) return;
+            e.preventDefault();
+            loadRecaptcha(function () {
+                grecaptcha.execute(siteKey, { action: 'login' }).then(function (token) {
+                    captchaInput.value = token;
+                    formEl.submit();
+                });
+            });
+        });
+    });
+})();
+</script>
+{% endblock %}

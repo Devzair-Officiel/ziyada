@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<script>if(location.hash){var t=document.createElement('style');t.textContent='html{opacity:0!important}';document.head.appendChild(t);window.addEventListener('load',function(){var el=document.querySelector(location.hash);if(el)el.scrollIntoView();document.head.removeChild(t);})}</script>
+
+		<title>
+			{% block title %}
+				{{globalSetting.website_name}}
+			{% endblock %}
+		</title>
+
+		{% if globalSetting.favicon_filename is defined and globalSetting.favicon_filename %}
+			<link rel="icon" type="image/png" href="/assets/images/setting/{{ globalSetting.favicon_filename }}" sizes="32x32">
+			<link rel="shortcut icon" href="/assets/images/setting/{{ globalSetting.favicon_filename }}">
+			<link rel="apple-touch-icon" href="/assets/images/setting/{{ globalSetting.favicon_filename }}">
+		{% else %}
+			<link rel="icon" type="image/png" href="{{ asset('favicon/favicon-96x96.png') }}" sizes="96x96">
+			<link rel="icon" type="image/svg+xml" href="{{ asset('favicon/favicon.svg') }}">
+			<link rel="shortcut icon" href="{{ asset('favicon/favicon.ico') }}">
+			<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon/apple-touch-icon.png') }}">
+			<link rel="manifest" href="{{ asset('favicon/site.webmanifest') }}">
+		{% endif %}
+
+        {% set s = seo ?? null %}
+
+        {% if s and s.description %}
+            <meta name="description" content="{{ s.description }}">
+        {% endif %}
+        {% if s and s.canonical %}
+            <link rel="canonical" href="{{ s.canonical }}">
+        {% endif %}
+        {# Robots : priorité au payload SEO ; fallback restrictif si aucun payload ne l'a défini. #}
+        <meta name="robots" content="{{ (s and s.robots) ? s.robots : 'noindex,nofollow' }}">
+
+
+		<meta property="og:site_name" content="{{ globalSetting.website_name }}">
+		<meta property="og:locale" content="fr_FR"/>
+		<meta name="geo.region" content="FR-IDF"/>
+
+		{% if s.og is defined %}
+			<meta property="og:title" content="{{ s.og.title }}">
+			<meta property="og:description" content="{{ s.og.description }}">
+			<meta property="og:url" content="{{ s.og.url }}">
+			<meta property="og:type" content="{{ s.og.type ?? 'website' }}">
+			{% if s.og.image %}
+				<meta property="og:image" content="{{ s.og.image }}">
+				<meta property="og:image:width" content="1200">
+				<meta property="og:image:height" content="630">
+				<meta property="og:image:alt" content="{{ s.og.title }}">
+			{% endif %}
+			<meta name="twitter:card" content="summary_large_image">
+			<meta name="twitter:title" content="{{ s.og.title }}">
+			<meta name="twitter:description" content="{{ s.og.description }}">
+			{% if s.og.image %}<meta name="twitter:image" content="{{ s.og.image }}">{% endif %}
+		{% endif %}
+
+        {% for schema in s.jsonLd|default([]) %}
+            <script type="application/ld+json">
+                {{ schema|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_UNESCAPED_UNICODE'))|raw }}
+            </script>
+        {% endfor %}
+
+
+
+		{# Préconnexion aux ressources critiques #}
+		<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+		{# Polices — display=swap évite le FOUT (flash de texte invisible) qui génère du CLS #}
+		<link rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;700&display=swap"
+			media="print" onload="this.media='all'">
+		<noscript>
+			<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;700&display=swap">
+		</noscript>
+
+		{# CSS critique bloquant #}
+		<link rel="stylesheet" href="/assets/bootstrap/css/bootstrap.min.css?v=1"/>
+		<link rel="stylesheet" href="/assets/css/style.refactor.css?v=1.3.1"/>
+
+		{# CSS responsive — bloquant : requis dès le premier rendu pour éviter les sauts de layout #}
+		<link rel="stylesheet" href="/assets/css/responsive.css?v=1.1.5"/>
+
+		{# Animations — non-bloquant (aucun impact sur le rendu initial) #}
+		<link rel="stylesheet" href="/assets/css/animate.css" media="print" onload="this.media='all'">
+		<noscript><link rel="stylesheet" href="/assets/css/animate.css"></noscript>
+
+		{# Google Analytics — définir GA_ID pour activer (chargé uniquement si consentement accepté) #}
+		{# <script>window.GA_ID = 'G-XXXXXXXXXX';</script> #}
+		{% block stylesheets %}{% endblock %}
+		{% block csrf_meta %}{% endblock %}
+		{% block javascripts %}{% endblock %}
+		</head>
+
+		<body{% block body_attrs %}{% endblock %}>
+
+			{% include 'components/svg_sprite.html.twig' %}
+
+			<div class="header_sticky_bar"></div>
+			{% include("header/index.html.twig") %}
+			<script>
+			(function(){
+				var bar = document.querySelector('.header_sticky_bar');
+				var hdr = document.querySelector('.header_wrap');
+				if (bar && hdr) bar.style.height = hdr.offsetHeight + 'px';
+			})();
+			</script>
+
+            <div class="notification" id="notification-container" aria-live="polite" aria-atomic="true"></div>
+
+            <div id="server-flashes" class="d-none" aria-hidden="true">
+                {% for label, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="server-flash" data-label="{{ label }}" data-message="{{ message }}"></div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+
+			{% block body %}{% endblock %}
+
+			{% include "components/quality_hold_modal.html.twig" %}
+
+			{% include "footer/index.html.twig" %}
+
+			<script src="/assets/js/jquery-3.6.0.min.js" defer></script>
+			<script src="/assets/js/popper.min.js" defer></script>
+			<script src="/assets/bootstrap/js/bootstrap.min.js" defer></script>
+			<script src="/assets/js/scripts.js?v=1.1.4" defer></script>
+			<script src="{{ asset('assets/js/utils/server-flashes.js') }}" type="module" defer></script>
+			<script type="module" src="/assets/js/main.js?v=1.1.0"></script>
+			{% block page_scripts %}{% endblock %}
+		</body>
+	</html>

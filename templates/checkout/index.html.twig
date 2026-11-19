@@ -1,0 +1,535 @@
+{% extends 'checkout.html.twig' %}
+
+{% block title %}{{ globalSetting.website_name }} | Finaliser ma commande{% endblock %}
+
+{% block stylesheets %}
+	<link rel="stylesheet" href="/assets/css/stripe.css">
+	<style>
+		/* ── Pickup point modal ─────────────────────────────── */
+		#colissimo-modal .modal-dialog { max-width: min(920px, 98vw); margin: 10px auto; }
+		#colissimo-modal .modal-content { border: none; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.22); }
+		#colissimo-modal .modal-header { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 10px 16px; }
+		#colissimo-modal .modal-header .modal-title { font-size: 14px; font-weight: 700; }
+		#colissimo-modal .modal-body { padding: 0 !important; height: 540px; background: #fff; display: flex; flex-direction: column; overflow: hidden; }
+		@media (max-width: 767px) { #colissimo-modal .modal-body { height: 75vh; max-height: 600px; } }
+		.pup-wrap { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+		.pup-sidebar { display: flex; flex-direction: column; width: 320px; flex-shrink: 0; border-right: 1px solid #ececec; background: #fff; min-width: 0; }
+		@media (max-width: 767px) { .pup-sidebar { width: 100%; border-right: none; } }
+		.pup-search-bar { display: flex; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; align-items: center; background: #fafafa; }
+		.pup-zip { flex: 1; font-size: 13px; border: 1px solid #ddd; border-radius: 6px; padding: 5px 10px; outline: none; }
+		.pup-zip:focus { border-color: #c8963e; box-shadow: 0 0 0 3px rgba(200,150,62,.12); }
+		.pup-search-bar .pup-search-btn { background: #c8963e; color: #fff; border: none; border-radius: 6px; padding: 7px 12px !important; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: auto !important; min-width: unset !important; max-width: unset !important; line-height: 1; }
+		.pup-search-btn:hover { background: #b07830; }
+		.pup-search-btn:disabled { opacity: .5; cursor: not-allowed; }
+		.pup-list { flex: 1; overflow-y: auto; }
+		.pup-item { padding: 11px 14px; cursor: pointer; border-bottom: 1px solid #f5f5f5; transition: background .1s; outline: none; }
+		.pup-item:hover, .pup-item:focus { background: #fffaf5; }
+		.pup-item--active { background: #fdf4e7; border-left: 3px solid #c8963e; padding-left: 11px; }
+		.pup-item-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 2px; }
+		.pup-item-name { font-size: 12px; font-weight: 700; color: #1a1a1a; text-transform: capitalize; line-height: 1.3; }
+		.pup-item-dist { font-size: 11px; color: #c8963e; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+		.pup-item-addr { font-size: 11px; color: #6b7280; margin-bottom: 5px; }
+		.pup-item-hours { margin-top: 5px; }
+		.pup-today-open { font-size: 11px; color: #1a1a1a; }
+		.pup-today-open strong { color: #b07830; }
+		.pup-today-closed { font-size: 11px; color: #6b7280; }
+		.pup-today-closed strong { color: #6b7280; }
+		.pup-hours-details { margin-top: 3px; }
+		.pup-map-wrap .pup-zone-btn { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 1000; background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 4px 10px !important; font-size: 11px; font-weight: 600; color: #374151; cursor: pointer; box-shadow: 0 1px 6px rgba(0,0,0,.12); white-space: nowrap; transition: background .15s; width: auto !important; min-width: unset !important; line-height: normal; }
+		.pup-map-wrap .pup-zone-btn:hover { background: #f9fafb; }
+		.pup-map-wrap .pup-zone-btn:disabled { opacity: .6; cursor: not-allowed; }
+		.pup-hours-table { border-collapse: collapse; font-size: 11px; width: 100%; margin-top: 4px; }
+		.pup-hours-table td { padding: 1px 0; }
+		.pup-hours-day { color: #6b7280; width: 28px; font-weight: 600; }
+		.pup-hours-val { color: #374151; }
+		.pup-hours-closed { color: #6b7280; font-style: italic; }
+		.pup-hours-today .pup-hours-day { color: #b07830; }
+		.pup-hours-today .pup-hours-val { color: #1a1a1a; font-weight: 600; }
+		@keyframes spin { to { transform: rotate(360deg); } }
+		.pup-select-btn { margin-top: 6px; font-size: 11px; font-weight: 700; color: #c8963e; border: 1px solid #c8963e; border-radius: 4px; padding: 3px 10px; background: none; cursor: pointer; display: none; }
+		.pup-item--active .pup-select-btn { display: inline-block; }
+		.pup-select-btn:hover { background: #c8963e; color: #fff; }
+		.pup-map-wrap { flex: 1; position: relative; min-width: 0; overflow: hidden; }
+		@media (max-width: 767px) { .pup-map-wrap { display: none; } }
+		.pup-map { position: absolute; inset: 0; }
+		.pup-marker { transition: filter .15s; filter: drop-shadow(0 1px 3px rgba(0,0,0,.4)); opacity: .75; }
+		.pup-marker-active { filter: drop-shadow(0 2px 8px rgba(200,150,62,.8)) !important; opacity: 1 !important; }
+		.pup-ac-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 2000; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.12); list-style: none; margin: 3px 0 0; padding: 4px 0; max-height: 220px; overflow-y: auto; }
+		.pup-ac-item { padding: 7px 12px; cursor: pointer; font-size: 12px; transition: background .1s; }
+		.pup-ac-item:hover, .pup-ac-item--active { background: #fdf4e7; }
+		.pup-ac-label { color: #374151; }
+		.pup-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 12px; color: #888; font-size: 14px; }
+		.pup-error { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #888; font-size: 13px; text-align: center; padding: 24px; gap: 8px; }
+	</style>
+{% endblock %}
+
+{% block csrf_meta %}
+	<meta name="csrf-token-address" content="{{ csrf_token('address_api') }}">
+{% endblock %}
+
+{% block body %}
+{% set total_products = 0 %}
+{% for item in cart.items %}
+	{% set total_products = total_products + (item.quantity ?? 0) %}
+{% endfor %}
+
+<div class="nide-checkout main_content"
+	data-stripe-public-key="{{ stripe_public_key }}"
+	data-cart="{{ cart_json|e('html_attr') }}"
+	data-orderid="{{ orderId }}"
+	data-colissimo-token="{{ colissimo_token }}"
+	data-colissimo-zipcode="{{ addresses|first ? addresses|first.codePostal : '' }}"
+	data-colissimo-city="{{ addresses|first ? addresses|first.city : '' }}"
+	data-address-api="{{ address_api }}"
+	data-address-csrf="{{ csrf_token('address_api') }}"
+	data-countries-url="{{ asset('assets/data/countries.json') }}">
+
+	<div class="container">
+
+		{# ── En-tête ── #}
+		<div class="nide-checkout__header">
+			<a href="{{ path('app_cart') }}" class="nide-checkout__back">
+				<svg class="icon" aria-hidden="true"><use href="#icon-arrow-left"></use></svg>
+				Panier
+			</a>
+			<div class="nide-checkout__steps">
+				<span class="nide-checkout__step nide-checkout__step--active">
+					<span class="nide-checkout__step-num">1</span> Livraison
+				</span>
+				<span class="nide-checkout__step-sep" aria-hidden="true"></span>
+				<span class="nide-checkout__step">
+					<span class="nide-checkout__step-num">2</span> Paiement
+				</span>
+			</div>
+			<span class="nide-checkout__count">
+				{{ total_products }} article{% if total_products > 1 %}s{% endif %}
+			</span>
+		</div>
+
+		<div class="nide-checkout__body">
+
+			{# ══ Colonne gauche — formulaire ══ #}
+			<div class="nide-checkout__form-col">
+
+				{# ── Mode de livraison ── #}
+				{% if carriers|length > 0 %}
+				<div class="nide-checkout__section">
+					<h2 class="nide-checkout__section-title">
+						<svg class="icon" aria-hidden="true"><use href="#icon-truck"></use></svg>
+						Mode de livraison
+					</h2>
+					<div class="nide-carrier-list {% if carriers|length == 1 %}d-none{% endif %}" role="radiogroup" aria-label="Mode de livraison">
+						{% for carrier in carriers %}
+							<label class="nide-carrier-option carrier-option"
+								   data-carrier-id="{{ carrier.id }}"
+								   data-has-pickup="{{ carrier.hasPickupPoints() ? 'true' : 'false' }}"
+								   data-price="{{ carrier.price }}">
+								<input type="radio" name="carrier" value="{{ carrier.id }}" class="carrier-radio nide-carrier-option__radio">
+								<div class="nide-carrier-option__body">
+									{% if carrier.hasPickupPoints() %}
+										<img src="https://www.colissimo.fr/favicon.ico" alt="Colissimo" width="22" height="22" class="nide-carrier-option__logo">
+									{% else %}
+										<span class="nide-carrier-option__icon">
+											<svg class="icon" aria-hidden="true"><use href="#icon-truck"></use></svg>
+										</span>
+									{% endif %}
+									<div class="nide-carrier-option__info">
+										<span class="nide-carrier-option__name">{{ carrier.name }}</span>
+										{% if carrier.deliveryDelay %}
+											<span class="nide-carrier-option__delay">{{ carrier.deliveryDelay }}</span>
+										{% endif %}
+									</div>
+								</div>
+								<div class="nide-carrier-option__price">
+									{% if carrier.price == 0 or cart.sub_total >= cart.free_shipping_threshold %}
+										<span class="nide-carrier-option__free">Offert</span>
+									{% else %}
+										{{ (carrier.price / 100)|format_currency('EUR') }}
+									{% endif %}
+								</div>
+							</label>
+						{% endfor %}
+					</div>
+
+					{# Point relais #}
+					<div id="pickup-point-section" class="mt-3 d-none">
+						<div id="pickup-open-btn-wrapper">
+							<button type="button" id="pickup-open-btn" class="nide-pickup-btn">
+								<img src="https://www.colissimo.fr/favicon.ico" alt="Colissimo" width="28" height="28">
+								<div class="nide-pickup-btn__text">
+									<strong>Choisir un point relais Colissimo</strong>
+									<span>Bureaux de poste, relais commerçants…</span>
+								</div>
+								<svg class="icon pickup-btn-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+							</button>
+						</div>
+						<div id="pickup-selected" class="d-none">
+							<div class="nide-address-card nide-address-card--active">
+								<div id="pickup-selected-label"></div>
+								<button type="button" class="nide-checkout__link pickup-selected">
+									<svg class="icon" aria-hidden="true"><use href="#icon-pen"></use></svg> Changer
+								</button>
+							</div>
+						</div>
+					</div>
+
+					{# Téléphone point relais #}
+					<div id="pickup-phone-section" class="mt-3 d-none">
+						<label for="pickup-phone" class="nide-checkout__label">
+							<svg class="icon" aria-hidden="true"><use href="#icon-phone"></use></svg>
+							Numéro de portable <span class="nide-checkout__required">*</span>
+							<span class="nide-checkout__hint">requis pour le SMS d'arrivée</span>
+						</label>
+						<input type="tel" id="pickup-phone" name="pickup_phone"
+							   class="nide-checkout__input"
+							   placeholder="06 00 00 00 00"
+							   inputmode="tel" maxlength="20"
+							   value="{{ app.user.phone ?? '' }}">
+						<div id="pickup-phone-error" class="nide-checkout__error d-none">Veuillez saisir votre numéro de portable.</div>
+					</div>
+				</div>
+				{% endif %}
+
+				{# ── Adresse de livraison ── #}
+				<div class="nide-checkout__section" id="shipping-address-section">
+					<h2 class="nide-checkout__section-title">
+						<svg class="icon" aria-hidden="true"><use href="#icon-location"></use></svg>
+						Adresse de livraison
+					</h2>
+
+					<select id="shipping_address" name="shipping_address" class="d-none" aria-hidden="true" tabindex="-1">
+						<option value=""></option>
+						{% for address in addresses %}
+							<option value="{{ address.id }}">{{ address.clientName }}</option>
+						{% endfor %}
+					</select>
+
+					{% if addresses|length == 0 %}
+						<div class="nide-checkout__alert nide-checkout__alert--warning">
+							<svg class="icon" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>
+							Vous n'avez aucune adresse enregistrée. Ajoutez-en une pour continuer.
+						</div>
+					{% endif %}
+
+					<div id="shipping-address-cards" class="nide-address-cards">
+						{% for address in addresses %}
+							<div class="nide-address-card address-card-item"
+								 data-address-id="{{ address.id }}"
+								 role="button" tabindex="0"
+								 aria-label="{{ address.clientName }}, {{ address.street }}, {{ address.codePostal }} {{ address.city }}">
+								<div class="nide-address-card__radio address-card-icon">
+									<svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg>
+								</div>
+								<div class="nide-address-card__body">
+									<div class="nide-address-card__name address-card-name">{{ address.clientName }}</div>
+									<div class="nide-address-card__details address-card-details">
+										{{ address.street }}{% if address.moreDetails %}, {{ address.moreDetails }}{% endif %}<br>
+										{{ address.codePostal }} {{ address.city }}<br>
+										{{ address.state }}
+									</div>
+								</div>
+							</div>
+						{% endfor %}
+					</div>
+
+					<button type="button" class="nide-checkout__add-btn" id="checkout-add-address-btn">
+						<svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
+						Ajouter une adresse
+					</button>
+
+					<div id="checkout-add-address-form" class="nide-checkout__address-form d-none">
+						<h3 class="nide-checkout__form-title">Nouvelle adresse</h3>
+						<form id="checkoutAddressForm">
+							<div class="nide-checkout__fields">
+								<input type="hidden" name="address_type" value="livraison">
+								<div class="nide-checkout__field nide-checkout__field--full">
+									<label class="nide-checkout__label">Nom de l'adresse <span class="nide-checkout__required">*</span></label>
+									<input required class="nide-checkout__input" name="name" type="text">
+								</div>
+								<div class="nide-checkout__field nide-checkout__field--full">
+									<label class="nide-checkout__label">Nom du destinataire <span class="nide-checkout__required">*</span></label>
+									<input required class="nide-checkout__input" name="client_name" type="text">
+								</div>
+								<div class="nide-checkout__field nide-checkout__field--grow">
+									<label class="nide-checkout__label">Rue <span class="nide-checkout__required">*</span></label>
+									<div class="position-relative">
+										<input required class="nide-checkout__input address-street-input" name="street" type="text" autocomplete="off" placeholder="Commencez à taper…">
+										<ul class="address-suggestions list-unstyled" role="listbox" aria-label="Suggestions d'adresse"></ul>
+									</div>
+								</div>
+								<div class="nide-checkout__field nide-checkout__field--short">
+									<label class="nide-checkout__label">Code postal <span class="nide-checkout__required">*</span></label>
+									<input required class="nide-checkout__input address-code-postal-input" name="code_postal" type="text" inputmode="numeric" maxlength="10">
+								</div>
+								<div class="nide-checkout__field nide-checkout__field--grow">
+									<label class="nide-checkout__label">Ville <span class="nide-checkout__required">*</span></label>
+									<input required class="nide-checkout__input address-city-input" name="city" type="text">
+								</div>
+								<div class="nide-checkout__field nide-checkout__field--short">
+									<label class="nide-checkout__label">Pays <span class="nide-checkout__required">*</span></label>
+									<select class="nide-checkout__select" name="state" id="checkout-state" required></select>
+								</div>
+								<div class="nide-checkout__field nide-checkout__field--full">
+									<label class="nide-checkout__label">Complément (optionnel)</label>
+									<input class="nide-checkout__input" name="more_details" type="text" maxlength="500">
+								</div>
+								<div class="nide-checkout__field nide-checkout__field--full nide-checkout__field--actions">
+									<button type="submit" class="btn btn-fill-out btn-sm">Enregistrer</button>
+									<button type="button" class="nide-checkout__cancel-btn" id="checkout-cancel-address">Annuler</button>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+
+				{# ── Adresse de facturation ── #}
+				<div class="nide-checkout__section">
+					<h2 class="nide-checkout__section-title">
+						<svg class="icon" aria-hidden="true"><use href="#icon-file"></use></svg>
+						Adresse de facturation
+					</h2>
+
+					<select id="billing_address" name="billing_address" class="d-none" aria-hidden="true" tabindex="-1">
+						<option value=""></option>
+						{% for address in addresses %}
+							<option value="{{ address.id }}">{{ address.clientName }}</option>
+						{% endfor %}
+					</select>
+
+					{% if addresses|length == 0 %}
+						<div class="nide-checkout__alert nide-checkout__alert--warning">
+							<svg class="icon" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>
+							Vous n'avez aucune adresse enregistrée.
+						</div>
+					{% endif %}
+
+					<div id="billing-address-cards" class="nide-address-cards">
+						{% for address in addresses %}
+							<div class="nide-address-card address-card-item"
+								 data-address-id="{{ address.id }}"
+								 role="button" tabindex="0"
+								 aria-label="{{ address.clientName }}, {{ address.street }}, {{ address.codePostal }} {{ address.city }}">
+								<div class="nide-address-card__radio address-card-icon">
+									<svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg>
+								</div>
+								<div class="nide-address-card__body">
+									<div class="nide-address-card__name address-card-name">{{ address.clientName }}</div>
+									<div class="nide-address-card__details address-card-details">
+										{{ address.street }}{% if address.moreDetails %}, {{ address.moreDetails }}{% endif %}<br>
+										{{ address.codePostal }} {{ address.city }}<br>
+										{{ address.state }}
+									</div>
+								</div>
+							</div>
+						{% endfor %}
+					</div>
+
+					<button type="button" class="nide-checkout__add-btn" id="checkout-add-billing-btn">
+						<svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
+						Ajouter une adresse
+					</button>
+
+					<div id="checkout-add-billing-form" class="nide-checkout__address-form d-none">
+						<h3 class="nide-checkout__form-title">Nouvelle adresse de facturation</h3>
+						<form id="checkoutBillingAddressForm">
+							<div class="nide-checkout__fields">
+								<div class="nide-checkout__field nide-checkout__field--full">
+									<label class="nide-checkout__label">Nom de l'adresse <span class="nide-checkout__required">*</span></label>
+									<input required class="nide-checkout__input" name="name" type="text">
+								</div>
+								<div class="nide-checkout__field nide-checkout__field--full">
+									<label class="nide-checkout__label">Nom du destinataire <span class="nide-checkout__required">*</span></label>
+									<input required class="nide-checkout__input" name="client_name" type="text">
+								</div>
+								<div class="nide-checkout__field nide-checkout__field--grow">
+									<label class="nide-checkout__label">Rue <span class="nide-checkout__required">*</span></label>
+									<div class="position-relative">
+										<input required class="nide-checkout__input address-street-input" name="street" type="text" autocomplete="off" placeholder="Commencez à taper…">
+										<ul class="address-suggestions list-unstyled" role="listbox" aria-label="Suggestions d'adresse"></ul>
+									</div>
+								</div>
+								<div class="nide-checkout__field nide-checkout__field--short">
+									<label class="nide-checkout__label">Code postal <span class="nide-checkout__required">*</span></label>
+									<input required class="nide-checkout__input address-code-postal-input" name="code_postal" type="text" inputmode="numeric" maxlength="10">
+								</div>
+								<div class="nide-checkout__field nide-checkout__field--grow">
+									<label class="nide-checkout__label">Ville <span class="nide-checkout__required">*</span></label>
+									<input required class="nide-checkout__input address-city-input" name="city" type="text">
+								</div>
+								<div class="nide-checkout__field nide-checkout__field--short">
+									<label class="nide-checkout__label">Pays <span class="nide-checkout__required">*</span></label>
+									<select class="nide-checkout__select" name="state" id="checkout-billing-state" required></select>
+								</div>
+								<div class="nide-checkout__field nide-checkout__field--full">
+									<label class="nide-checkout__label">Complément (optionnel)</label>
+									<input class="nide-checkout__input" name="more_details" type="text" maxlength="500">
+								</div>
+								<div class="nide-checkout__field nide-checkout__field--full nide-checkout__field--actions">
+									<button type="submit" class="btn btn-fill-out btn-sm">Enregistrer</button>
+									<button type="button" class="nide-checkout__cancel-btn" id="checkout-cancel-billing">Annuler</button>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+
+				{# ── Commentaire ── #}
+				<div class="nide-checkout__section">
+					<h2 class="nide-checkout__section-title">
+						<svg class="icon" aria-hidden="true"><use href="#icon-message"></use></svg>
+						Commentaire <span class="nide-checkout__section-optional">optionnel</span>
+					</h2>
+					<label class="visually-hidden" for="comment">Commentaire de commande</label>
+					<textarea class="nide-checkout__textarea" name="comment" id="comment" rows="3" maxlength="2000"
+						placeholder="Indications pour la livraison, instructions particulières…"></textarea>
+					<span class="nide-checkout__hint">2000 caractères max.</span>
+				</div>
+
+			</div>{# fin form-col #}
+
+			{# ══ Colonne droite — récapitulatif ══ #}
+			<aside class="nide-checkout__summary" aria-label="Récapitulatif de commande">
+
+				<div class="nide-checkout__summary-header">
+					<h2 class="nide-checkout__summary-title">Votre commande</h2>
+					<span class="nide-checkout__summary-count">{{ total_products }} article{% if total_products > 1 %}s{% endif %}</span>
+				</div>
+
+				{# Articles #}
+				<ul class="nide-checkout__items">
+					{% for item in cart.items %}
+						{% set unit_price_cents = item.product.displayPrice ?? 0 %}
+						<li class="nide-checkout__item">
+							<div class="nide-checkout__item-img-wrap">
+								{% set _checkoutImg = item.product.image[0].filename %}
+								<img src="/assets/images/products/{{ _checkoutImg|split('.')|slice(0, -1)|join('.') ~ '-thumb.webp' }}"
+									 width="52" height="52" loading="lazy"
+									 alt="{{ item.product.image[0].alt }}"
+									 class="nide-checkout__item-img">
+								<span class="nide-checkout__item-qty">{{ item.quantity }}</span>
+							</div>
+							<div class="nide-checkout__item-info">
+								<span class="nide-checkout__item-name">{{ item.product.title }}</span>
+								<span class="nide-checkout__item-unit">{{ (unit_price_cents / 100)|format_currency('EUR') }} / unité</span>
+							</div>
+							<span class="nide-checkout__item-total">
+								{{ (unit_price_cents * item.quantity / 100)|format_currency('EUR') }}
+							</span>
+						</li>
+					{% endfor %}
+				</ul>
+
+				{# Totaux #}
+				<div class="nide-checkout__totals">
+					<div class="nide-checkout__total-line">
+						<span>Sous-total HT</span>
+						<span>{{ (cart.sub_total_ht / 100)|format_currency('EUR') }}</span>
+					</div>
+					<div class="nide-checkout__total-line">
+						<span>TVA</span>
+						<span>{{ (cart.taxe / 100)|format_currency('EUR') }}</span>
+					</div>
+					<div class="nide-checkout__total-line" id="checkout-shipping-label">
+						<span>
+							{% if cart.carrier.free_shipping %}Livraison offerte{% else %}Livraison{% endif %}
+						</span>
+						<span id="checkout-shipping-price">
+							{% if cart.carrier.free_shipping %}
+								<span class="nide-checkout__free">Offerte</span>
+							{% else %}
+								{{ (cart.carrier.price / 100)|format_currency('EUR') }}
+							{% endif %}
+						</span>
+					</div>
+				</div>
+
+				<div class="nide-checkout__grand-total">
+					<span>Total TTC</span>
+					<span id="checkout-total">{{ (cart.sub_total_with_carrier / 100)|format_currency('EUR') }}</span>
+				</div>
+
+				{% if not cart.carrier.free_shipping and cart.free_shipping_remaining > 0 %}
+					<div class="nide-checkout__shipping-hint">
+						<svg class="icon" aria-hidden="true"><use href="#icon-gift"></use></svg>
+						Plus que <strong>{{ (cart.free_shipping_remaining / 100)|format_currency('EUR') }}</strong> pour la livraison offerte
+					</div>
+				{% endif %}
+
+				<div class="nide-checkout__cta-hint" id="checkout-hint">
+					<svg class="icon" aria-hidden="true"><use href="#icon-info"></use></svg>
+					Complétez vos adresses de livraison et de facturation pour accéder au paiement.
+				</div>
+
+				<div class="payment-button d-none">
+					<button id="open-payment-modal" class="btn btn-fill-out nide-checkout__pay-btn" type="button">
+						<svg class="icon" aria-hidden="true"><use href="#icon-credit-card"></use></svg>
+						Payer — <span id="checkout-pay-total">{{ (cart.sub_total_with_carrier / 100)|format_currency('EUR') }}</span>
+					</button>
+				</div>
+
+				<div class="nide-checkout__secure">
+					<svg class="icon" aria-hidden="true"><use href="#icon-lock"></use></svg>
+					Paiement sécurisé par Stripe
+				</div>
+
+			</aside>
+
+		</div>{# fin body #}
+	</div>
+</div>
+
+{# ── Modale Colissimo ── #}
+<div class="modal fade" id="colissimo-modal" tabindex="-1" aria-labelledby="colissimoModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<div class="d-flex align-items-center gap-2">
+					<img src="https://www.colissimo.fr/favicon.ico" alt="Colissimo" width="22" height="22">
+					<div>
+						<h5 class="modal-title mb-0" id="colissimoModalLabel">Choisir un point relais</h5>
+						<div class="text-muted" style="font-size:11px;">Colissimo — La Poste</div>
+					</div>
+				</div>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+			</div>
+			<div class="modal-body" id="colissimo-modal-body"></div>
+		</div>
+	</div>
+</div>
+
+{# ── Modale Stripe ── #}
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false"
+	 tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title visually-hidden" id="staticBackdropLabel">Paiement</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+			</div>
+			<div class="modal-body">
+				<div id="stripe-method">
+					<form id="payment-form">
+						<div id="link-authentication-element"></div>
+						<div id="payment-element"></div>
+						<button id="submit" type="submit">
+							<div class="spinner hidden" id="spinner"></div>
+							<span id="button-text">Payer maintenant</span>
+						</button>
+						<div id="payment-message" class="hidden" aria-live="polite"></div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+	{{ parent() }}
+	<script src="https://js.stripe.com/v3/" defer></script>
+	<script src="{{ asset('assets/js/modules/address-autocomplete.js') }}" defer></script>
+	<script src="{{ asset('assets/js/pages/checkout/address.js') }}?v=3" type="module" defer></script>
+	<script src="{{ asset('assets/js/pages/checkout/stripe.js') }}?v=3" type="module" defer></script>
+{% endblock %}
+
+{% block body_scripts %}{% endblock %}

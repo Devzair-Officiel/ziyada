@@ -1,0 +1,30 @@
+# see https://symfony.com/doc/current/reference/configuration/framework.html
+framework:
+    secret: '%env(APP_SECRET)%'
+    default_locale: fr
+    trusted_proxies: '127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16'
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-proto', 'x-forwarded-port']
+    # Host header validation : regex unique (Symfony fera un OR interne).
+    # Vide en dev/preview (aucune restriction). Défini en prod publique pour bloquer
+    # les injections de Host header (cache poisoning, canonical spoofing).
+    # Exemple prod : TRUSTED_HOSTS="^(nidemiel\.com|www\.nidemiel\.com)$"
+    trusted_hosts: '%env(default::string:TRUSTED_HOSTS)%'
+
+    # Note that the session will be started ONLY if you read or write from it.
+    session: 
+        # "auto" => Secure seulement quand la requête est en HTTPS
+        cookie_secure: auto
+        # Lax est un bon compromis pour une app classique (login + pages)
+        cookie_samesite: lax
+        # Bon réflexe : JS ne peut pas lire le cookie de session
+        cookie_httponly: true
+        cookie_lifetime: 0
+
+    serializer:
+        enabled: true
+
+when@test:
+    framework:
+        test: true
+        session:
+            storage_factory_id: session.storage.factory.mock_file

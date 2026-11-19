@@ -1,0 +1,13 @@
+{# Ruban en diagonale à poser sur la carte produit (dans .nide-card__media).
+   Requiert `product.isOnQualityHold` = true. Le clic ouvre la modale partagée. #}
+{% set _qhLabel = product.qualityHoldLabel|default('') %}
+{% set _qhReason = product.qualityHoldReason %}
+<button type="button"
+        class="nide-card__quality-ribbon"
+        data-quality-modal
+        data-quality-title="{{ product.title }}"
+        data-quality-label="{{ _qhLabel }}"
+        data-quality-reason="{{ _qhReason }}"
+        aria-label="Voir pourquoi {{ product.title }} n'est pas disponible">
+    <span class="nide-card__quality-ribbon-text">{{ _qhLabel != '' ? _qhLabel : 'Indisponible' }}</span>
+</button>

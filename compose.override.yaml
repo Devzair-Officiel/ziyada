@@ -1,0 +1,98 @@
+---
+# Development environment override
+services:
+  init-perms:
+    image: ${IMAGES_PREFIX:-}app-php
+    user: "0:0"
+    environment:
+      UID: "${UID:-1000}"
+      GID: "${GID:-1000}"
+    command:
+      - sh
+      - -lc
+      - |
+        set -eux
+        mkdir -p /app/var /data /config
+        chown -R "${UID}:${GID}" /app/var /data /config
+    volumes:
+      - app_var:/app/var
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: "no"
+  php:
+    user: "${UID:-1000}:${GID:-1000}"
+    cap_add:
+      - NET_BIND_SERVICE
+    build:
+      context: .
+      target: frankenphp_dev
+    env_file:
+      - path: .env.dev.local
+        required: false
+    ports:
+      - name: http
+        target: 80
+        published: ${HTTP_PORT:-80}
+        protocol: tcp
+      - name: https
+        target: 443
+        published: ${HTTPS_PORT:-443}
+        protocol: tcp
+      - name: http3
+        target: 443
+        published: ${HTTP3_PORT:-443}
+        protocol: udp
+    volumes:
+      # indispensables pour FrankenPHP/Caddy (sinon unhealthy/restart)
+      - caddy_data:/data
+      - caddy_config:/config
+
+      # code + var isolé
+      - ./:/app
+      - app_var:/app/var
+
+      # conf dev
+      - ./frankenphp/Caddyfile:/etc/frankenphp/Caddyfile:ro
+      - ./frankenphp/conf.d/20-app.dev.ini:/usr/local/etc/php/app.conf.d/20-app.dev.ini:ro
+      # - /app/vendor
+    environment:
+      FRANKENPHP_WORKER_CONFIG: watch
+      MERCURE_EXTRA_DIRECTIVES: demo
+      XDEBUG_MODE: "${XDEBUG_MODE:-off}"
+      APP_ENV: "${APP_ENV:-dev}"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    tty: true
+
+  messenger-worker:
+    user: "${UID:-1000}:${GID:-1000}"
+    build:
+      context: .
+      target: frankenphp_dev
+    env_file:
+      - path: .env.dev.local
+        required: false
+    volumes:
+      - ./:/app
+      - app_var:/app/var
+    environment:
+      APP_ENV: "${APP_ENV:-dev}"
+
+  database:
+    env_file:
+      - path: .env.dev.local
+        required: false
+    ports:
+      - "${POSTGRES_PORT:-5434}:5432"
+
+  mailer:
+    image: axllent/mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+
+volumes:
+  app_var:

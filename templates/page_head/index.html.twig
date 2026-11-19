@@ -1,0 +1,26 @@
+<div class="nide-page-head">
+	<div class="container">
+		<div class="nide-page-head__inner">
+			<h1 class="nide-page-head__title">{{ page_name }}</h1>
+			<nav aria-label="Fil d'Ariane">
+				<ol class="nide-breadcrumb">
+					<li class="nide-breadcrumb__item">
+						<a href="{{ path('app_home') }}" class="nide-breadcrumb__link">
+							<svg class="icon" aria-hidden="true" width="13" height="13"><use href="#icon-home"></use></svg>
+							Accueil
+						</a>
+					</li>
+					{% for item in breadcrumbs|default([]) %}
+						<li class="nide-breadcrumb__item">
+							{% if loop.last %}
+								<span class="nide-breadcrumb__current" aria-current="page">{{ item.label }}</span>
+							{% else %}
+								<a href="{{ item.url }}" class="nide-breadcrumb__link">{{ item.label }}</a>
+							{% endif %}
+						</li>
+					{% endfor %}
+				</ol>
+			</nav>
+		</div>
+	</div>
+</div>

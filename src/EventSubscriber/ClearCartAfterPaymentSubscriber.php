@@ -1,0 +1,71 @@
+<?php
+
+namespace App\EventSubscriber;
+
+use App\Entity\User;
+use App\Enum\PaymentStatus;
+use App\Service\CartService;
+use App\Repository\OrderRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+
+/**
+ * Vide automatiquement le panier de session après qu'un paiement a été confirmé,
+ * afin d'éviter de re-présenter un panier déjà commandé lors de la prochaine requête.
+ */
+final class ClearCartAfterPaymentSubscriber implements EventSubscriberInterface
+{
+    public function __construct(
+        private readonly Security $security,
+        private readonly OrderRepository $orderRepository,
+        private readonly CartService $cartService,
+        private readonly EntityManagerInterface $em,
+    ) {}
+
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            KernelEvents::REQUEST => ['onKernelRequest', -10],
+        ];
+    }
+
+    public function onKernelRequest(RequestEvent $event): void
+    {
+        if (!$event->isMainRequest()) {
+            return;
+        }
+
+        // Rien à nettoyer si la session n'a pas de panier : évite une requête
+        // SQL sur chaque hit de chaque utilisateur connecté.
+        $request = $event->getRequest();
+        if (!$request->hasPreviousSession() || empty($request->getSession()->get('cart'))) {
+            return;
+        }
+
+        $user = $this->security->getUser();
+        if (!$user instanceof User) {
+            return;
+        }
+
+        $order = $this->orderRepository->findOneBy(
+            [
+                'user' => $user,
+                'paymentStatus' => PaymentStatus::Paye,
+                'cartClearedAt' => null,
+            ],
+            ['id' => 'DESC']
+        );
+
+        if ($order === null) {
+            return;
+        }
+
+        $this->cartService->clearCart();
+
+        $order->markCartCleared();
+        $this->em->flush();
+    }
+}

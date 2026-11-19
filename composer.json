@@ -1,0 +1,125 @@
+{
+    "name": "symfony/skeleton",
+    "type": "project",
+    "license": "MIT",
+    "description": "A minimal Symfony project recommended to create bare bones applications",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.4.16",
+        "ext-ctype": "*",
+        "ext-iconv": "*",
+        "doctrine/doctrine-bundle": "^3.2",
+        "doctrine/doctrine-migrations-bundle": "^4.0",
+        "doctrine/orm": "^3.6",
+        "dompdf/dompdf": "^2.0",
+        "easycorp/easyadmin-bundle": "^4.27",
+        "intervention/image": "^4.0",
+        "karser/karser-recaptcha3-bundle": "^0.3.0",
+        "knpuniversity/oauth2-client-bundle": "^2.20",
+        "league/oauth2-google": "^5.0",
+        "phpdocumentor/reflection-docblock": "^5.6",
+        "phpstan/phpdoc-parser": "^2.3",
+        "sentry/sentry-symfony": "^5.10",
+        "stripe/stripe-php": "^19.1",
+        "symfony/cache": "8.0.*",
+        "symfony/config": "8.0.*",
+        "symfony/console": "8.0.*",
+        "symfony/doctrine-messenger": "8.0.*",
+        "symfony/dotenv": "8.0.*",
+        "symfony/flex": "^2",
+        "symfony/form": "8.0.*",
+        "symfony/framework-bundle": "8.0.*",
+        "symfony/html-sanitizer": "8.0.*",
+        "symfony/http-client": "8.0.*",
+        "symfony/lock": "8.0.*",
+        "symfony/mailer": "8.0.*",
+        "symfony/messenger": "8.0.*",
+        "symfony/property-access": "8.0.*",
+        "symfony/property-info": "8.0.*",
+        "symfony/rate-limiter": "8.0.*",
+        "symfony/runtime": "8.0.*",
+        "symfony/security-bundle": "8.0.*",
+        "symfony/serializer": "8.0.*",
+        "symfony/translation": "8.0.*",
+        "symfony/twig-bundle": "8.0.*",
+        "symfony/validator": "8.0.*",
+        "symfony/yaml": "8.0.*",
+        "symfonycasts/reset-password-bundle": "^1.25",
+        "symfonycasts/verify-email-bundle": "^1.18",
+        "twig/extra-bundle": "^2.12|^3.0",
+        "twig/intl-extra": "^3.22",
+        "twig/string-extra": "^3.22",
+        "twig/twig": "^2.12|^3.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "symfony/flex": true,
+            "symfony/runtime": true,
+            "phpstan/extension-installer": true
+        },
+        "bump-after-update": true,
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "App\\Tests\\": "tests/"
+        }
+    },
+    "replace": {
+        "symfony/polyfill-ctype": "*",
+        "symfony/polyfill-iconv": "*",
+        "symfony/polyfill-php72": "*",
+        "symfony/polyfill-php73": "*",
+        "symfony/polyfill-php74": "*",
+        "symfony/polyfill-php80": "*",
+        "symfony/polyfill-php81": "*",
+        "symfony/polyfill-php82": "*",
+        "symfony/polyfill-php83": "*",
+        "symfony/polyfill-php84": "*"
+    },
+    "scripts": {
+        "auto-scripts": {
+            "cache:clear": "symfony-cmd",
+            "assets:install %PUBLIC_DIR%": "symfony-cmd"
+        },
+        "post-install-cmd": [
+            "@auto-scripts"
+        ],
+        "post-update-cmd": [
+            "@auto-scripts"
+        ],
+        "analyse": [
+            "vendor/bin/phpstan analyse --memory-limit=512M"
+        ],
+        "test": [
+            "vendor/bin/phpunit --no-coverage --testdox"
+        ]
+    },
+    "conflict": {
+        "symfony/symfony": "*"
+    },
+    "extra": {
+        "symfony": {
+            "allow-contrib": false,
+            "require": "8.0.*",
+            "docker": true
+        }
+    },
+    "require-dev": {
+        "phpstan/extension-installer": "*",
+        "phpstan/phpstan": "*",
+        "phpunit/phpunit": "*",
+        "symfony/browser-kit": "8.0.*",
+        "symfony/css-selector": "8.0.*",
+        "symfony/maker-bundle": "^1.65",
+        "symfony/stopwatch": "8.0.*",
+        "symfony/web-profiler-bundle": "8.0.*"
+    }
+}

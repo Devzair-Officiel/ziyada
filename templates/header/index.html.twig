@@ -1,0 +1,245 @@
+<header class="nide-header header_wrap fixed-top active" role="banner">
+
+	{# ── Bandeau promo ── #}
+	<div class="nide-header__promo">
+		<div class="container">
+			<p class="nide-header__promo-text">
+				<svg class="icon" aria-hidden="true"><use href="#icon-truck"></use></svg>
+				Livraison offerte dès 50&nbsp;€ d'achat
+			</p>
+		</div>
+	</div>
+
+	{# ── Barre principale ── #}
+	<div class="nide-header__bar bottom_header dark_skin main_menu_uppercase">
+		<div class="container">
+			<nav class="nide-header__nav" role="navigation" aria-label="Navigation principale">
+
+				{# Logo #}
+				<a href="/" class="nide-header__logo navbar-brand" aria-label="Retour à l'accueil">
+					{% if globalSetting.logo_filename %}
+						<img src="/assets/images/setting/{{ globalSetting.logo_filename }}"
+							 alt="{{ globalSetting.logo_alt ?? globalSetting.website_name }}"
+							 width="160" height="48" fetchpriority="high" decoding="async">
+					{% else %}
+						<span class="nide-header__logo-text">{{ globalSetting.website_name }}</span>
+					{% endif %}
+				</a>
+
+				{# Menu desktop #}
+				<ul class="nide-header__menu navbar-nav">
+					<li class="nide-header__menu-item">
+						<a class="nide-header__menu-link nav-link" href="/">Nos miels</a>
+					</li>
+					<li class="nide-header__menu-item">
+						<a class="nide-header__menu-link nav-link nide-header__menu-link--pro" href="/grossiste-miel">
+							Miels en gros
+							<span class="nide-header__pro-badge">Pro</span>
+						</a>
+					</li>
+					<li class="nide-header__menu-item">
+						<a class="nide-header__menu-link nav-link" href="/page/qualite-et-analyses">Qualité &amp; analyses</a>
+					</li>
+					<li class="nide-header__menu-item dropdown">
+						<a href="#" class="nide-header__menu-link nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+							À propos
+							<svg class="icon nide-header__chevron" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+						</a>
+						<div class="nide-header__dropdown dropdown-menu">
+							<ul>
+								<li><a class="nide-header__dropdown-link dropdown-item nav-link nav_item" href="/page/notre-boutique">Notre boutique</a></li>
+								<li><a class="nide-header__dropdown-link dropdown-item nav-link nav_item" href="/page/notre-selection">Notre sélection</a></li>
+								<li><a class="nide-header__dropdown-link dropdown-item nav-link nav_item" href="/page/provenance">Provenance</a></li>
+								<li><a class="nide-header__dropdown-link dropdown-item nav-link nav_item" href="{{ path('app_guide_sensoriel') }}">Guide sensoriel</a></li>
+								<li><a class="nide-header__dropdown-link dropdown-item nav-link nav_item" href="/faq-miel">FAQ</a></li>
+								{% if is_granted('ROLE_ADMIN') %}
+									<li><a class="nide-header__dropdown-link dropdown-item nav-link nav_item" href="/carnet-degustation-miel">Carnet de dégustation</a></li>
+								{% endif %}
+							</ul>
+						</div>
+					</li>
+					<li class="nide-header__menu-item">
+						<a class="nide-header__menu-link nav-link" href="/blog">Blog</a>
+					</li>
+					<li class="nide-header__menu-item">
+						<a class="nide-header__menu-link nav-link" href="/contact">Contact</a>
+					</li>
+				</ul>
+
+				{# Actions #}
+				<ul class="nide-header__actions navbar-nav attr-nav align-items-center">
+
+					{# Téléphone #}
+					{% if globalSetting.phone %}
+					<li class="nide-header__action nide-header__action--phone">
+						<a href="tel:{{ globalSetting.phone|replace({' ': ''}) }}" class="nide-header__action-link" aria-label="Nous appeler">
+							<svg class="icon" aria-hidden="true"><use href="#icon-phone"></use></svg>
+							<span class="nide-header__phone-label">{{ globalSetting.phone }}</span>
+						</a>
+					</li>
+					{% endif %}
+
+					{# Recherche #}
+					<li class="nide-header__action">
+						<a href="#" class="nide-header__action-link nav-link search_trigger" aria-label="Rechercher">
+							<svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+						</a>
+						<div class="search_wrap">
+							<form action="/product/search" method="get">
+								<input type="text" name="term" placeholder="Rechercher un miel…" class="form-control" aria-label="Champ de recherche">
+								<button type="submit" class="search_icon" aria-label="Valider">
+									<svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+								</button>
+							</form>
+						</div>
+					</li>
+
+					{# Comparateur #}
+					<li class="nide-header__action nide-header__action--desktop-only">
+						<a href="/compare" class="nide-header__action-link" aria-label="Comparateur">
+							<svg class="icon" aria-hidden="true"><use href="#icon-shuffle"></use></svg>
+						</a>
+					</li>
+
+					{# Wishlist #}
+					<li class="nide-header__action nide-header__action--desktop-only">
+						<a href="/wishlist" class="nide-header__action-link" aria-label="Liste d'envies">
+							<svg class="icon" aria-hidden="true"><use href="#icon-heart"></use></svg>
+						</a>
+					</li>
+
+					{# Compte #}
+					<li class="nide-header__action">
+						{% if app.user %}
+							<a href="{{ is_granted('ROLE_ADMIN') ? '/admin' : '/account' }}" class="nide-header__action-link" aria-label="Mon compte">
+								<svg class="icon" aria-hidden="true"><use href="#icon-user"></use></svg>
+							</a>
+						{% else %}
+							<a href="/login" class="nide-header__action-link" aria-label="Connexion">
+								<svg class="icon" aria-hidden="true"><use href="#icon-user"></use></svg>
+							</a>
+						{% endif %}
+					</li>
+
+					{# Panier #}
+					<li class="nide-header__action nide-header__action--cart dropdown cart_dropdown">
+						<a href="#" class="nide-header__cart-btn nav-link cart_trigger" data-bs-toggle="dropdown" aria-label="Panier">
+							<svg class="icon" aria-hidden="true"><use href="#icon-cart"></use></svg>
+							<span class="cart_count"></span>
+						</a>
+						<div class="cart_box dropdown-menu dropdown-menu-right">
+							<ul class="cart_list"></ul>
+							<div class="cart_footer">
+								<p class="cart_total_ht cart_total">
+									<strong>Sous-total HT :</strong>
+									<span class="cart_price_value_ht"></span>
+								</p>
+								<p class="cart_taxe cart_total">
+									<strong>Taxe :</strong>
+									<span class="cart_taxe_value"></span>
+								</p>
+								<p class="cart_total_ttc cart_total">
+									<strong>Sous-total TTC :</strong>
+									<span class="cart_price_value_ttc"></span>
+								</p>
+								<p class="cart_buttons">
+									<a class="btn btn-fill-line view-cart" href="/cart">Mon panier</a>
+									<a class="btn btn-fill-out checkout" href="/checkout">Paiement</a>
+								</p>
+							</div>
+						</div>
+					</li>
+
+					{# Burger mobile #}
+					<li class="nide-header__action nide-header__action--burger">
+						<button type="button" class="nide-header__burger" id="nideBurger"
+								aria-expanded="false" aria-label="Ouvrir le menu">
+							<span class="nide-burger__bar"></span>
+							<span class="nide-burger__bar"></span>
+							<span class="nide-burger__bar"></span>
+						</button>
+					</li>
+
+				</ul>
+			</nav>
+		</div>
+	</div>
+
+	{# ── Overlay + Drawer mobile (hors container pour couvrir tout l'écran) ── #}
+	<div class="nide-nav-overlay" id="nideOverlay" aria-hidden="true"></div>
+
+	<nav class="nide-nav-drawer" id="nideDrawer" aria-label="Menu mobile" aria-hidden="true">
+		<div class="nide-nav-drawer__header">
+			<a href="/" class="nide-nav-drawer__brand">
+				{% if globalSetting.logo_filename %}
+					<img src="/assets/images/setting/{{ globalSetting.logo_filename }}"
+						 alt="{{ globalSetting.website_name }}" width="120" height="36" loading="lazy">
+				{% else %}
+					<strong>{{ globalSetting.website_name }}</strong>
+				{% endif %}
+			</a>
+			<button type="button" class="nide-nav-drawer__close" id="nideDrawerClose" aria-label="Fermer le menu">
+				<svg class="icon" aria-hidden="true"><use href="#icon-x"></use></svg>
+			</button>
+		</div>
+
+		<ul class="nide-nav-drawer__menu">
+			<li class="nide-nav-drawer__item">
+				<a class="nide-nav-drawer__link" href="/">Nos miels</a>
+			</li>
+			<li class="nide-nav-drawer__item">
+				<a class="nide-nav-drawer__link nide-nav-drawer__link--pro" href="/grossiste-miel">
+					Miels en gros
+					<span class="nide-header__pro-badge">Pro</span>
+				</a>
+			</li>
+			<li class="nide-nav-drawer__item">
+				<a class="nide-nav-drawer__link" href="/page/qualite-et-analyses">Qualité &amp; analyses</a>
+			</li>
+			<li class="nide-nav-drawer__item nide-nav-drawer__item--has-sub">
+				<button class="nide-nav-drawer__link nide-nav-drawer__toggle" type="button" aria-expanded="false">
+					À propos
+					<svg class="icon nide-nav-drawer__arrow" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+				</button>
+				<ul class="nide-nav-drawer__sub" hidden>
+					<li><a class="nide-nav-drawer__sub-link" href="/page/notre-boutique">Notre boutique</a></li>
+					<li><a class="nide-nav-drawer__sub-link" href="/page/notre-selection">Notre sélection</a></li>
+					<li><a class="nide-nav-drawer__sub-link" href="/page/provenance">Provenance</a></li>
+					<li><a class="nide-nav-drawer__sub-link" href="{{ path('app_guide_sensoriel') }}">Guide sensoriel</a></li>
+					<li><a class="nide-nav-drawer__sub-link" href="/faq-miel">FAQ</a></li>
+					{% if is_granted('ROLE_ADMIN') %}
+						<li><a class="nide-nav-drawer__sub-link" href="/carnet-degustation-miel">Carnet de dégustation</a></li>
+					{% endif %}
+				</ul>
+			</li>
+			<li class="nide-nav-drawer__item">
+				<a class="nide-nav-drawer__link" href="/blog">Blog</a>
+			</li>
+			<li class="nide-nav-drawer__item">
+				<a class="nide-nav-drawer__link" href="/contact">Contact</a>
+			</li>
+		</ul>
+
+		<div class="nide-nav-drawer__footer">
+			<a href="/compare" class="nide-nav-drawer__quick">
+				<svg class="icon" aria-hidden="true"><use href="#icon-shuffle"></use></svg>
+				<span>Comparateur</span>
+			</a>
+			<a href="/wishlist" class="nide-nav-drawer__quick">
+				<svg class="icon" aria-hidden="true"><use href="#icon-heart"></use></svg>
+				<span>Wishlist</span>
+			</a>
+			<a href="/cart" class="nide-nav-drawer__quick">
+				<svg class="icon" aria-hidden="true"><use href="#icon-cart"></use></svg>
+				<span>Panier</span>
+			</a>
+			{% if globalSetting.phone %}
+			<a href="tel:{{ globalSetting.phone|replace({' ': ''}) }}" class="nide-nav-drawer__quick">
+				<svg class="icon" aria-hidden="true"><use href="#icon-phone"></use></svg>
+				<span>{{ globalSetting.phone }}</span>
+			</a>
+			{% endif %}
+		</div>
+	</nav>
+
+</header>
