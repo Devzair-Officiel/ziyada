@@ -1,6 +1,13 @@
-# 📦 Projet Symfony – E-commerce
+# 🌿 Ziyada — e-commerce bien-être (ziyada.fr)
 
-Ce projet est une application **e-commerce B2C** développée avec **Symfony** et une architecture moderne, orientée performance, maintenabilité et sécurité.
+Boutique en ligne **B2C** de produits bien-être naturels (huile de nigelle, gélules, gummies, savons, shilajit, déodorants), développée avec **Symfony** : performance, sécurité, SEO et visibilité dans les IA (GEO).
+
+📚 **Documentation**
+- [`CLAUDE.md`](CLAUDE.md) — instructions et règles de travail du projet
+- [`docs/PLAN.md`](docs/PLAN.md) — **plan et avancement**
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — architecture technique
+- [`docs/PRODUIT-ET-THEME.md`](docs/PRODUIT-ET-THEME.md) — marque, catalogue, thème, conformité des textes
+- Autres guides techniques (SEO, mise en production, cron, Colissimo, sauvegardes…) dans [`docs/`](docs/)
 
 ---
 
