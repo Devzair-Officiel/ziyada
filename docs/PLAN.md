@@ -1,6 +1,6 @@
 # Plan du projet Ziyada — avancement
 
-> **Dernière mise à jour : 2026-11-19.** Ce document est la référence de l'avancement. Il se met à jour **à chaque tâche terminée** (case cochée + ligne dans le [journal](#journal-davancement)).
+> **Dernière mise à jour : 2026-11-26.** Ce document est la référence de l'avancement. Il se met à jour **à chaque tâche terminée** (case cochée + ligne dans le [journal](#journal-davancement)).
 > Légende : ✅ fait · 🟡 en cours · ⬜ à faire · ❓ à décider
 
 ## 1. Vision et objectifs
@@ -27,6 +27,9 @@ Principe directeur : **pas de date butoir, la qualité d'abord** — chaque phas
 | 2026-11-19 | **Pas de date de lancement** : qualité d'abord. |
 | 2026-11-19 | Design **cohérent avec les étiquettes** des produits (crème/kraft, bleu nuit, or, noir). Logo à fournir plus tard. |
 | 2026-11-19 | **Workflow** : branche depuis VS Code avec Claude Code, qui pousse la branche et fournit titre et description de PR ; Aurélien ouvre la PR sur GitHub et la fusionne. Planification dans le Projet Claude, une discussion par phase ou sous-phase. |
+| 2026-11-26 | **CI** : les étapes migrations et `doctrine:schema:validate` sont retirées pour l'instant et seront réactivées en 0.4 sur la migration initiale propre. |
+| 2026-11-26 | **Mercure** : étape CI retirée (inutilisé), sous réserve de vérification. |
+| 2026-11-26 | **super-linter** supprimé ; PHP-CS-Fixer et `composer audit` seront ajoutés en phase 6. |
 
 ## 3. Vue d'ensemble des phases
 
@@ -56,7 +59,7 @@ Principe directeur : **pas de date butoir, la qualité d'abord** — chaque phas
 
 ### 0.1 Socle de vérification
 
-- ⬜ Lancer la suite de tests et PHPStan sous PHP 8.4 (Docker ou CI) et corriger ce qui casse après le renommage
+- ✅ Lancer la suite de tests et PHPStan sous PHP 8.4 (Docker ou CI) et corriger ce qui casse après le renommage (2026-11-26)
 - ⬜ Nettoyer la CI : le job Docker `tests` contient des étapes désactivées (`if: false`) héritées du squelette Symfony ; les activer (base de test, migrations, PHPUnit) ou les retirer
 
 ### 0.2 Retrait du grossiste
@@ -70,6 +73,7 @@ Principe directeur : **pas de date butoir, la qualité d'abord** — chaque phas
 ### 0.4 Base propre
 
 - ⬜ **Migration initiale propre** : remplacer les 86 migrations héritées (dont le seed de 10 miels Nidemiel) par une migration unique générée depuis les entités sur une base vide
+- ⬜ Réactiver en CI les étapes migrations et schema:validate sur la migration initiale
 - ⬜ **Renommer les URLs « miel »** : `/miels/{slug}` → `/produits/{slug}` (à confirmer), `/faq-miel` → `/faq`, etc. Mettre à jour sitemap, canonicals, liens internes
 - ⬜ Adapter la documentation héritée (`docs/*`) : retirer les exemples « miel », « Nidemiel », « my-commerce » (ex. `/etc/cron.d/my-commerce`)
 - ❓ Sort de `ProductLot` et du « quality hold » (traçabilité par lot / DLUO, utile pour des compléments alimentaires) : garder, simplifier ou retirer ?
@@ -195,3 +199,4 @@ Guide détaillé : `docs/mise-en-production.md`.
 |---|---|
 | 2026-11-19 | Dépôt `ziyada` créé. Import de `my-commerce` sans historique. Rebranding Nidemiel → Ziyada / ziyada.fr (38 fichiers). Cadrage du périmètre. Première version de la documentation et des instructions. |
 | 2026-11-19 | Méthode de travail documentée (`CLAUDE.md` § 5) : Aurélien décide et fusionne, le Projet Claude planifie, Claude Code code en local sur branche + PR. Phase 0 découpée en sous-phases 0.1 à 0.4. Question ouverte « workflow Git » tranchée et retirée. |
+| 2026-11-26 | 0.1 : état des lieux de la CI (jobs PHPUnit & PHPStan, Tests Docker et Lint en échec sur `main`). PHPUnit vert sous PHP 8.4.28 (115 tests) ; PHPStan corrigé (2 tests `!== null` redondants dans `CompareService`, sans lien avec le renommage). Décisions CI prises (migrations/schema:validate reportés en 0.4, Mercure et super-linter retirés). Jobs Tests Docker et Lint encore rouges : traités par « Nettoyer la CI ». |
