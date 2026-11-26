@@ -87,14 +87,22 @@ Commandes applicatives : `app:create-user`, `app:stock:release-expired-reservati
 ### Allégations santé et conformité (produits bien-être)
 - **Aucune allégation de santé, d'efficacité ou de résultat** (ex. « éclaircissant », « anti-âge », « booste… », « soigne… ») sans validation préalable. Voir la section dédiée de `docs/PRODUIT-ET-THEME.md`. En cas de doute, **ne pas écrire l'allégation** et poser la question.
 
-## 5. Conventions de travail
+## 5. Méthode de travail
+
+- **Aurélien décide et fusionne** : il valide les choix, relit les PR et les fusionne dans `main`.
+- **Claude du Projet « ziyada »** planifie (une discussion par phase ou sous-phase) et rédige les prompts de chaque chantier.
+- **Claude Code** modifie le code **uniquement en local**, sur une branche dédiée, puis pousse la branche et ouvre une **PR vers `main`**.
+- **Jamais de commit direct sur `main`.** Un sujet = une branche = une PR.
+- En fin de tâche : mettre à jour `docs/PLAN.md` (case cochée + ligne dans le journal) dans la même PR.
+
+## 6. Conventions de travail
 
 - **Une branche par chantier** (`feat/…`, `fix/…`, `docs/…`, `chore/…`), pull request vers `main`, **CI verte** (PHPUnit + PHPStan) avant fusion. Commits en français, courts et explicites (`feat: …`, `fix: …`).
 - Ne jamais committer `.env.local`, de clés ou de dumps de base. `.env` ne contient que des valeurs vides ou non sensibles.
 - Textes de l'interface, de l'admin et de la doc en **français**. Noms de code en anglais (convention existante : certains enums sont en français, ne pas renommer sans raison).
 - Pas de refactor « au passage » : un sujet par PR.
 
-## 6. Définition de « terminé »
+## 7. Définition de « terminé »
 
 - [ ] Le comportement demandé fonctionne, y compris les cas d'erreur (réseau, 4xx/5xx, double soumission).
 - [ ] Tests ajoutés ou mis à jour pour toute règle métier touchée (prix, panier, stock, statuts, webhook) ; un bug corrigé = un test de non-régression.
@@ -104,7 +112,7 @@ Commandes applicatives : `app:create-user`, `app:stock:release-expired-reservati
 - [ ] Migration fournie si le schéma change ; impacts de déploiement notés.
 - [ ] `docs/PLAN.md` mis à jour ; documentation touchée corrigée.
 
-## 7. Héritage de `my-commerce` à connaître
+## 8. Héritage de `my-commerce` à connaître
 
 - URLs encore « miel » (`/miels/{slug}`, `/faq-miel`, `/guide-sensoriel-miel`, `/carnet-degustation-miel`, `/grossiste-miel`) : **à renommer ou supprimer** (voir plan).
 - L'entité `Product` contient des champs propres au miel (profil de dégustation, texture, couleur, notes aromatiques…) et des champs grossiste : **à remplacer** par un modèle adapté au bien-être.
@@ -112,7 +120,7 @@ Commandes applicatives : `app:create-user`, `app:stock:release-expired-reservati
 - Les migrations (86) et leur contenu Nidemiel seront remplacés par une migration initiale propre.
 - Certains documents de `docs/` contiennent encore des exemples « miel » : à adapter au catalogue Ziyada.
 
-## 8. Carte de la documentation
+## 9. Carte de la documentation
 
 | Document | Contenu |
 |---|---|
