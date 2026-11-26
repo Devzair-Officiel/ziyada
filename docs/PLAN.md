@@ -30,6 +30,7 @@ Principe directeur : **pas de date butoir, la qualité d'abord** — chaque phas
 | 2026-11-26 | **CI** : les étapes migrations et `doctrine:schema:validate` sont retirées pour l'instant et seront réactivées en 0.4 sur la migration initiale propre. |
 | 2026-11-26 | **Mercure** : étape CI retirée (inutilisé), sous réserve de vérification. |
 | 2026-11-26 | **super-linter** supprimé ; PHP-CS-Fixer et `composer audit` seront ajoutés en phase 6. |
+| 2026-11-26 | **Job CI Docker réduit à la construction de l'image** jusqu'à la migration initiale propre (0.4) : les 86 migrations héritées échouent sur base neuve (`Version20260425170426` ajoute `is_wholesale`, déjà ajoutée par `Version20260425120000`). |
 
 ## 3. Vue d'ensemble des phases
 
@@ -73,7 +74,13 @@ Principe directeur : **pas de date butoir, la qualité d'abord** — chaque phas
 ### 0.4 Base propre
 
 - ⬜ **Migration initiale propre** : remplacer les 86 migrations héritées (dont le seed de 10 miels Nidemiel) par une migration unique générée depuis les entités sur une base vide
-- ⬜ Réactiver en CI les étapes migrations et schema:validate sur la migration initiale
+- ⬜ Réactiver en CI le démarrage de la stack et `doctrine:schema:validate` sur la migration initiale propre. Prérequis constatés :
+  - valeurs Postgres et `APP_SECRET` de CI via `.env.dev.local` (les variables `env:` du workflow n'atteignent pas les conteneurs) ;
+  - UID/GID du runner à passer à compose (non vérifié) ;
+  - `init-perms` compté en échec par `up --wait` (préférer `depends_on` avec `service_completed_successfully` dans compose) ;
+  - course `php` / `messenger-worker` au démarrage (`composer install` et migrations simultanés) ;
+  - Check HTTP à réintroduire : sans suivi des redirections, il ne vérifie que Caddy.
+- ⬜ Retirer les traces Mercure : `compose.override.yaml:60`, `compose.yaml:47-48`, `Caddyfile:21` et `:77`
 - ⬜ **Renommer les URLs « miel »** : `/miels/{slug}` → `/produits/{slug}` (à confirmer), `/faq-miel` → `/faq`, etc. Mettre à jour sitemap, canonicals, liens internes
 - ⬜ Adapter la documentation héritée (`docs/*`) : retirer les exemples « miel », « Nidemiel », « my-commerce » (ex. `/etc/cron.d/my-commerce`)
 - ❓ Sort de `ProductLot` et du « quality hold » (traçabilité par lot / DLUO, utile pour des compléments alimentaires) : garder, simplifier ou retirer ?
@@ -200,3 +207,4 @@ Guide détaillé : `docs/mise-en-production.md`.
 | 2026-11-19 | Dépôt `ziyada` créé. Import de `my-commerce` sans historique. Rebranding Nidemiel → Ziyada / ziyada.fr (38 fichiers). Cadrage du périmètre. Première version de la documentation et des instructions. |
 | 2026-11-19 | Méthode de travail documentée (`CLAUDE.md` § 5) : Aurélien décide et fusionne, le Projet Claude planifie, Claude Code code en local sur branche + PR. Phase 0 découpée en sous-phases 0.1 à 0.4. Question ouverte « workflow Git » tranchée et retirée. |
 | 2026-11-26 | 0.1 : état des lieux de la CI (jobs PHPUnit & PHPStan, Tests Docker et Lint en échec sur `main`). PHPUnit vert sous PHP 8.4.28 (115 tests) ; PHPStan corrigé (2 tests `!== null` redondants dans `CompareService`, sans lien avec le renommage). Décisions CI prises (migrations/schema:validate reportés en 0.4, Mercure et super-linter retirés). Jobs Tests Docker et Lint encore rouges : traités par « Nettoyer la CI ». |
+| 2026-11-26 | 0.1 : job CI Docker « Tests » réduit à la construction des images (démarrage de la stack, Check HTTP et étapes mortes retirés). Constat : les 86 migrations héritées ne sont pas rejouables sur base neuve (colonne `faq.is_wholesale` ajoutée deux fois). Plan corrigé : la case 0.4 couvre désormais le démarrage de la stack et `schema:validate`, avec les prérequis constatés ; ajout du retrait des traces Mercure. |
