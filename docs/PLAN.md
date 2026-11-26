@@ -26,7 +26,7 @@ Principe directeur : **pas de date butoir, la qualité d'abord** — chaque phas
 | 2026-11-19 | Site en **français uniquement** (architecture à garder compatible avec d'autres langues plus tard). |
 | 2026-11-19 | **Pas de date de lancement** : qualité d'abord. |
 | 2026-11-19 | Design **cohérent avec les étiquettes** des produits (crème/kraft, bleu nuit, or, noir). Logo à fournir plus tard. |
-| 2026-11-19 | **Workflow** : branche + PR depuis VS Code avec Claude Code, planification dans le Projet Claude, une discussion par phase ou sous-phase. |
+| 2026-11-19 | **Workflow** : branche depuis VS Code avec Claude Code, qui pousse la branche et fournit titre et description de PR ; Aurélien ouvre la PR sur GitHub et la fusionne. Planification dans le Projet Claude, une discussion par phase ou sous-phase. |
 
 ## 3. Vue d'ensemble des phases
 

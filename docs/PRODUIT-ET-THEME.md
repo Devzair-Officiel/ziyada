@@ -134,4 +134,4 @@ Les produits de bien-être sont encadrés : ce que l'on dit d'un produit (effica
 | Témoignages affirmant un effet santé | Avis sur l'expérience d'achat, la texture, l'usage — modérés avant publication |
 | Chiffres ou études non cités | Faits vérifiables et **sourcés** (analyse de laboratoire, certificat), avec la date |
 
-En cas de doute : **ne pas publier l'allégation** et la soumettre pour validation (question ouverte n° 9 du plan).
+En cas de doute : **ne pas publier l'allégation** et la soumettre pour validation (question ouverte n° 8 du plan).

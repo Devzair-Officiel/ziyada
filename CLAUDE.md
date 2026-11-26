@@ -89,9 +89,9 @@ Commandes applicatives : `app:create-user`, `app:stock:release-expired-reservati
 
 ## 5. Méthode de travail
 
-- **Aurélien décide et fusionne** : il valide les choix, relit les PR et les fusionne dans `main`.
+- **Aurélien décide et fusionne** : il valide les choix, **ouvre lui-même les PR sur GitHub**, les relit et les fusionne dans `main`.
 - **Claude du Projet « ziyada »** planifie (une discussion par phase ou sous-phase) et rédige les prompts de chaque chantier.
-- **Claude Code** modifie le code **uniquement en local**, sur une branche dédiée, puis pousse la branche et ouvre une **PR vers `main`**.
+- **Claude Code** modifie le code **uniquement en local**, sur une branche dédiée, puis pousse la branche et fournit un **titre et une description de PR vers `main` prêts à coller**. Claude Code **ne crée pas la PR**.
 - **Jamais de commit direct sur `main`.** Un sujet = une branche = une PR.
 - En fin de tâche : mettre à jour `docs/PLAN.md` (case cochée + ligne dans le journal) dans la même PR.
 
