@@ -138,7 +138,7 @@ final class CompareService
             if (!\is_array($lab)) continue;
 
             foreach (['mgo', 'npa', 'dha', 'hmf'] as $key) {
-                if (isset($lab[$key]['value']) && $lab[$key]['value'] !== null) {
+                if (isset($lab[$key]['value'])) {
                     $has[$key] = true;
                 }
             }
@@ -189,7 +189,7 @@ final class CompareService
         if ($param === null || ($param['requested'] ?? true) === false) return null;
 
         $valueText = $param['valueText'] ?? null;
-        if ($valueText === null && isset($param['value']) && $param['value'] !== null) {
+        if ($valueText === null && isset($param['value'])) {
             $unit = $param['unit'] ?? '';
             $valueText = trim($param['value'] . ' ' . $unit);
         }
