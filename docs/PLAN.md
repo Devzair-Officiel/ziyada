@@ -61,7 +61,8 @@ Principe directeur : **pas de date butoir, la qualité d'abord** — chaque phas
 ### 0.1 Socle de vérification
 
 - ✅ Lancer la suite de tests et PHPStan sous PHP 8.4 (Docker ou CI) et corriger ce qui casse après le renommage (2026-11-26)
-- ⬜ Nettoyer la CI : le job Docker `tests` contient des étapes désactivées (`if: false`) héritées du squelette Symfony ; les activer (base de test, migrations, PHPUnit) ou les retirer
+- ✅ Nettoyer la CI : le job Docker `tests` contient des étapes désactivées (`if: false`) héritées du squelette Symfony ; les activer (base de test, migrations, PHPUnit) ou les retirer (2026-11-26)
+  - Démarrage de la stack Docker en CI reporté en 0.4 (migration initiale propre).
 
 ### 0.2 Retrait du grossiste
 
@@ -208,3 +209,4 @@ Guide détaillé : `docs/mise-en-production.md`.
 | 2026-11-19 | Méthode de travail documentée (`CLAUDE.md` § 5) : Aurélien décide et fusionne, le Projet Claude planifie, Claude Code code en local sur branche + PR. Phase 0 découpée en sous-phases 0.1 à 0.4. Question ouverte « workflow Git » tranchée et retirée. |
 | 2026-11-26 | 0.1 : état des lieux de la CI (jobs PHPUnit & PHPStan, Tests Docker et Lint en échec sur `main`). PHPUnit vert sous PHP 8.4.28 (115 tests) ; PHPStan corrigé (2 tests `!== null` redondants dans `CompareService`, sans lien avec le renommage). Décisions CI prises (migrations/schema:validate reportés en 0.4, Mercure et super-linter retirés). Jobs Tests Docker et Lint encore rouges : traités par « Nettoyer la CI ». |
 | 2026-11-26 | 0.1 : job CI Docker « Tests » réduit à la construction des images (démarrage de la stack, Check HTTP et étapes mortes retirés). Constat : les 86 migrations héritées ne sont pas rejouables sur base neuve (colonne `faq.is_wholesale` ajoutée deux fois). Plan corrigé : la case 0.4 couvre désormais le démarrage de la stack et `schema:validate`, avec les prérequis constatés ; ajout du retrait des traces Mercure. |
+| 2026-11-26 | 0.1 : job CI « Lint » (super-linter) retiré, ainsi que `.github/linters/` (`actionlint.yaml`, `zizmor.yaml`), utilisé uniquement par super-linter. La CI ne compte plus que « PHPUnit & PHPStan » et « Tests » (construction des images). À reprendre si zizmor est ajouté en phase 6 : l'ancien réglage acceptait les actions épinglées par tag (`unpinned-uses: ref-pin`). |
